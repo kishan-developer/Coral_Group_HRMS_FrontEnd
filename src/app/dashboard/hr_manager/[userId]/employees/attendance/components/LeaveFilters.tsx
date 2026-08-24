@@ -1,0 +1,153 @@
+'use client';
+
+import { Search, Filter, X, Calendar } from 'lucide-react';
+
+interface LeaveFiltersProps {
+  searchTerm: string;
+  onSearchChange: (value: string) => void;
+  department: string;
+  onDepartmentChange: (value: string) => void;
+  designation: string;
+  onDesignationChange: (value: string) => void;
+  status: string;
+  onStatusChange: (value: string) => void;
+  leaveType: string;
+  onLeaveTypeChange: (value: string) => void;
+  dateRange: string;
+  onDateRangeChange: (value: string) => void;
+  balanceRange: string;
+  onBalanceRangeChange: (value: string) => void;
+  onClearFilters: () => void;
+}
+
+export default function LeaveFilters({
+  searchTerm,
+  onSearchChange,
+  department,
+  onDepartmentChange,
+  designation,
+  onDesignationChange,
+  status,
+  onStatusChange,
+  leaveType,
+  onLeaveTypeChange,
+  dateRange,
+  onDateRangeChange,
+  balanceRange,
+  onBalanceRangeChange,
+  onClearFilters,
+}: LeaveFiltersProps) {
+  const hasActiveFilters = department || designation || status || leaveType || dateRange || balanceRange || searchTerm;
+
+  return (
+    <div className="space-y-4">
+      {/* Search Bar */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+        <input
+          type="text"
+          placeholder="Search by employee name or ID..."
+          value={searchTerm}
+          onChange={(e) => onSearchChange(e.target.value)}
+          className="w-full pl-10 pr-4 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#94cb3d] focus:border-transparent"
+        />
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-wrap gap-2">
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-zinc-400" />
+          <span className="text-sm font-medium text-zinc-600 dark:text-zinc-400">Filters:</span>
+        </div>
+
+        {/* Department Filter */}
+        <select
+          value={department}
+          onChange={(e) => onDepartmentChange(e.target.value)}
+          className="px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs text-zinc-700 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-[#94cb3d]"
+        >
+          <option value="">All Departments</option>
+          <option value="real-estate">Real Estate</option>
+          <option value="hotels">Hotels</option>
+          <option value="saree">Saree</option>
+          <option value="ho">HO</option>
+          <option value="it">IT</option>
+          <option value="hr">HR</option>
+          <option value="finance">Finance</option>
+        </select>
+
+        {/* Designation Filter */}
+        <select
+          value={designation}
+          onChange={(e) => onDesignationChange(e.target.value)}
+          className="px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs text-zinc-700 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-[#94cb3d]"
+        >
+          <option value="">All Designations</option>
+          <option value="manager">Manager</option>
+          <option value="senior-executive">Senior Executive</option>
+          <option value="executive">Executive</option>
+          <option value="junior-executive">Junior Executive</option>
+        </select>
+
+        {/* Status Filter */}
+        <select
+          value={status}
+          onChange={(e) => onStatusChange(e.target.value)}
+          className="px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs text-zinc-700 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-[#94cb3d]"
+        >
+          <option value="">All Status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+
+        {/* Leave Type Filter */}
+        <select
+          value={leaveType}
+          onChange={(e) => onLeaveTypeChange(e.target.value)}
+          className="px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs text-zinc-700 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-[#94cb3d]"
+        >
+          <option value="">All Leave Types</option>
+          <option value="cl">CL (Casual Leave)</option>
+          <option value="pl">PL (Privilege Leave)</option>
+        </select>
+
+        {/* Date Range Filter */}
+        <select
+          value={dateRange}
+          onChange={(e) => onDateRangeChange(e.target.value)}
+          className="px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs text-zinc-700 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-[#94cb3d]"
+        >
+          <option value="">All Time</option>
+          <option value="today">Today</option>
+          <option value="week">This Week</option>
+          <option value="month">This Month</option>
+          <option value="quarter">This Quarter</option>
+          <option value="year">This Year</option>
+        </select>
+
+        {/* Balance Range Filter */}
+        <select
+          value={balanceRange}
+          onChange={(e) => onBalanceRangeChange(e.target.value)}
+          className="px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs text-zinc-700 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-[#94cb3d]"
+        >
+          <option value="">All Balances</option>
+          <option value="cl-low">CL &lt; 2</option>
+          <option value="pl-low">PL &lt; 3</option>
+          <option value="both-low">Both Low</option>
+        </select>
+
+        {/* Clear Filters Button */}
+        {hasActiveFilters && (
+          <button
+            onClick={onClearFilters}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-xs text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+          >
+            <X className="h-3 w-3" />
+            Clear
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
