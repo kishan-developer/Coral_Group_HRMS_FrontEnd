@@ -4,13 +4,14 @@ import Link from 'next/link';
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Mail, ShieldCheck } from 'lucide-react';
+import { getApiBaseUrl } from '@/lib/constants';
 
 function VerifyEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const userId = searchParams.get('userId');
   const email = searchParams.get('email');
-  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || '';
+  const BACKEND_URL = getApiBaseUrl();
 
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
@@ -23,7 +24,8 @@ function VerifyEmailContent() {
     setError('');
 
     try {
-      const response = await fetch(`${BACKEND_URL}/api/v1/auth/verify-email`, {
+      const verifyUrl = BACKEND_URL.endsWith('/api/v1') ? `${BACKEND_URL}/auth/verify-email` : `${BACKEND_URL}/api/v1/auth/verify-email`;
+      const response = await fetch(verifyUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -55,7 +57,8 @@ function VerifyEmailContent() {
     setError('');
 
     try {
-      const response = await fetch(`${BACKEND_URL}/api/v1/auth/resend-otp`, {
+      const resendUrl = BACKEND_URL.endsWith('/api/v1') ? `${BACKEND_URL}/auth/resend-otp` : `${BACKEND_URL}/api/v1/auth/resend-otp`;
+      const response = await fetch(resendUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -1,4 +1,4 @@
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || '';
+import { getApiBaseUrl } from './constants';
 
 let isRefreshing = false;
 let refreshSubscribers: ((token: string) => void)[] = [];
@@ -30,7 +30,7 @@ export const apiCall = async (
   // Ensure endpoint doesn't duplicate /api/v1 prefix
   const cleanEndpoint = endpoint.startsWith('/api/v1') ? endpoint.replace('/api/v1', '') : endpoint;
 
-  let response = await fetch(`${BACKEND_URL}${cleanEndpoint}`, {
+  let response = await fetch(`${getApiBaseUrl()}${cleanEndpoint}`, {
     ...options,
     headers,
     credentials: 'include',
@@ -42,7 +42,7 @@ export const apiCall = async (
       isRefreshing = true;
 
       try {
-        const refreshResponse = await fetch(`${BACKEND_URL}/auth/refresh-token`, {
+        const refreshResponse = await fetch(`${getApiBaseUrl()}/auth/refresh-token`, {
           method: 'POST',
           credentials: 'include',
         });
@@ -56,7 +56,7 @@ export const apiCall = async (
           onRefreshed(newAccessToken);
 
           // Retry original request with new token
-          response = await fetch(`${BACKEND_URL}${cleanEndpoint}`, {
+          response = await fetch(`${getApiBaseUrl()}${cleanEndpoint}`, {
             ...options,
             headers: {
               ...headers,
@@ -92,7 +92,7 @@ export const apiCall = async (
 
       // Retry original request with new token
       const newAccessToken = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
-      response = await fetch(`${BACKEND_URL}${cleanEndpoint}`, {
+      response = await fetch(`${getApiBaseUrl()}${cleanEndpoint}`, {
         ...options,
         headers: {
           ...headers,

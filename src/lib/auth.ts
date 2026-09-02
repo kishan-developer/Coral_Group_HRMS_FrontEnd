@@ -1,4 +1,4 @@
-import { STORAGE_KEYS } from './constants';
+import { STORAGE_KEYS, getApiBaseUrl } from './constants';
 
 export interface User {
   id: string;
@@ -53,8 +53,8 @@ export async function logout(): Promise<void> {
   
   try {
     if (user?.id) {
-      const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || '';
-      const logoutUrl = BACKEND_URL.endsWith('/api/v1') ? `${BACKEND_URL}/auth/logout` : `${BACKEND_URL}/api/v1/auth/logout`;
+      const BACKEND_URL = getApiBaseUrl();
+      const logoutUrl = `${BACKEND_URL}/auth/logout`;
       await fetch(logoutUrl, {
         method: 'POST',
         headers: {

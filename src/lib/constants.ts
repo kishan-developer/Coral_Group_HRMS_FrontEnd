@@ -18,7 +18,21 @@ export const STORAGE_KEYS = {
   SIDEBAR_COLLAPSED: 'hrms.sidebar.collapsed',
 } as const;
 
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
+export const getApiBaseUrl = (): string => {
+  let url = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_BACKEND_URL || '';
+  url = url.trim().replace(/\/+$/, '');
+  if (!url) return '';
+  if (!url.endsWith('/api/v1')) {
+    if (url.endsWith('/api')) {
+      url = `${url}/v1`;
+    } else {
+      url = `${url}/api/v1`;
+    }
+  }
+  return url;
+};
+
+export const API_BASE_URL = getApiBaseUrl();
 
 export const API_ROUTES = {
   AUTH: {

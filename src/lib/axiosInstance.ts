@@ -1,10 +1,9 @@
 import axios, { InternalAxiosRequestConfig, AxiosError } from 'axios';
 import Cookies from 'js-cookie';
-
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || '';
+import { getApiBaseUrl } from './constants';
 
 export const axiosInstance = axios.create({
-  baseURL: BACKEND_URL,
+  baseURL: getApiBaseUrl(),
   headers: {
     'Content-Type': 'application/json',
   },
@@ -85,7 +84,7 @@ axiosInstance.interceptors.response.use(
 
       try {
         const { data } = await axios.post(
-          `${BACKEND_URL}/auth/refresh-token`,
+          `${getApiBaseUrl()}/auth/refresh-token`,
           {},
           { withCredentials: true }
         );
