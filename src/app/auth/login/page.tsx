@@ -171,7 +171,7 @@ export default function LoginPage() {
                   Remember me
                 </label>
                 <Link
-                  href="/auth/forgot-password"
+                  href="/auth/reset-password"
                   className="text-xs font-bold text-[#94cb3d] hover:underline"
                 >
                   Forgot password?
