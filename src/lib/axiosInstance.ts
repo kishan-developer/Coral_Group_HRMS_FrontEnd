@@ -1,7 +1,7 @@
 import axios, { InternalAxiosRequestConfig, AxiosError } from 'axios';
 import Cookies from 'js-cookie';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api/v1';
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 export const axiosInstance = axios.create({
   baseURL: BACKEND_URL,
@@ -29,9 +29,17 @@ const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue = [];
 };
 
-// Request Interceptor: Attach Access Token
+// Request Interceptor: Attach Access Token & Normalize URL
 axiosInstance.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
+    if (config.url) {
+      if (config.url.startsWith('/api/v1/')) {
+        config.url = config.url.replace('/api/v1/', '/');
+      } else if (config.url.startsWith('api/v1/')) {
+        config.url = config.url.replace('api/v1/', '/');
+      }
+    }
+
     const token =
       typeof window !== 'undefined'
         ? localStorage.getItem('accessToken') || Cookies.get('accessToken')

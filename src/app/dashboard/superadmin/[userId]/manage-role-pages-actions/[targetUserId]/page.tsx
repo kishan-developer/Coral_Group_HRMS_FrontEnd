@@ -62,7 +62,15 @@ export default function ManageRolePagesActions() {
   const router = useRouter();
   const userId = params.userId as string;
   const targetUserId = params.targetUserId as string;
-  const BACKEND_URL = API_BASE_URL.replace('/api', '');
+
+  const getApiUrl = (path: string) => {
+    const envUrl = process.env.NEXT_PUBLIC_API_URL || '';
+    let base = envUrl.trim().replace(/\/+$/, '');
+    if (!base.endsWith('/api/v1')) {
+      base = base.endsWith('/api') ? `${base}/v1` : `${base}/api/v1`;
+    }
+    return `${base}/${path.replace(/^\/+/, '')}`;
+  };
 
   const [activeTab, setActiveTab] = useState<'pages' | 'actions' | 'api' | 'special'>('pages');
   const [loading, setLoading] = useState(true);
@@ -73,12 +81,12 @@ export default function ManageRolePagesActions() {
     const fetchData = async () => {
       try {
         const token = getToken();
-        const response = await fetch(`${BACKEND_URL}/api/v1/users/${targetUserId}`, {
+        const response = await fetch(getApiUrl(`users/${targetUserId}`), {
           headers: { 'Authorization': `Bearer ${token}` },
         });
 
         const userData = await response.json();
-        if (userData.success) setUser(userData.data);
+        if (userData.success && userData.data) setUser(userData.data);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -87,12 +95,12 @@ export default function ManageRolePagesActions() {
     };
 
     fetchData();
-  }, [BACKEND_URL, targetUserId]);
+  }, [targetUserId]);
 
   const handleSave = async () => {
     try {
       const token = getToken();
-      const response = await fetch(`${BACKEND_URL}/api/v1/access-control/user-permissions`, {
+      const response = await fetch(getApiUrl('access-control/user-permissions'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -108,7 +116,7 @@ export default function ManageRolePagesActions() {
       });
 
       const data = await response.json();
-      if (data.success) {
+      if (data.success || response.ok) {
         alert('Permissions saved successfully');
         router.back();
       } else {

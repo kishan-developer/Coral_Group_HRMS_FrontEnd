@@ -6,7 +6,7 @@ import { Loader2 } from 'lucide-react';
 
 function JoiningFormContent({ token }: { token: string }) {
   const router = useRouter();
-  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api/v1';
+  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');

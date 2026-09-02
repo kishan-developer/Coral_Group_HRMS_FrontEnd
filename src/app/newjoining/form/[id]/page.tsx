@@ -8,7 +8,7 @@ export default function NewEmployeeJoiningForm() {
   const router = useRouter();
   const params = useParams();
   const formId = params.id;
-  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5002/api/v1';
+  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002/api/v1';
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');

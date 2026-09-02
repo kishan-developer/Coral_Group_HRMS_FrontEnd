@@ -41,7 +41,7 @@ export default function ExpensesPage() {
   const params = useParams();
   const router = useRouter();
   const userId = params.userId as string;
-  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api/v1';
+  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
   const [expenses, setExpenses] = useState<Expense[]>([
     { id: '1', employeeId: 'EMP001', employeeName: 'John Smith', department: 'Engineering', category: 'Salary', description: 'June 2026 Salary Disbursal', amount: 107960, date: '2026-06-30', status: 'Approved', paymentMethod: 'Bank Transfer', approvedBy: 'Accounts Manager' },

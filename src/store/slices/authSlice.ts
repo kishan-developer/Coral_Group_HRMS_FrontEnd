@@ -180,7 +180,7 @@ export const resetPassword = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const response = await axiosInstance.post('/api/v1/auth/reset-password', payload);
+      const response = await axiosInstance.post('/auth/reset-password', payload);
       const data = response.data;
       if (data.success) {
         return { message: data.message };
@@ -203,7 +203,7 @@ export const logoutUser = createAsyncThunk(
   async (userId: string | undefined = undefined) => {
     try {
       if (userId) {
-        await axiosInstance.post('/api/v1/auth/logout', { userId });
+        await axiosInstance.post('/auth/logout', { userId });
       }
     } catch (err) {
       console.warn('Logout API error:', err);

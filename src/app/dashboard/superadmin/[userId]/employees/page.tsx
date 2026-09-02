@@ -33,7 +33,7 @@ export default function EmployeesList() {
 
   const fetchEmployees = async () => {
     try {
-      const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api/v1';
+      const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || '';
       const response = await fetch(`${BACKEND_URL}/employees`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -52,7 +52,7 @@ export default function EmployeesList() {
 
   const handleStatusChange = async (employeeId: string, newStatus: string) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api/v1'}/employees/${employeeId}/status`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/employees/${employeeId}/status`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -72,7 +72,7 @@ export default function EmployeesList() {
   const handleDelete = async (employeeId: string) => {
     if (confirm('Are you sure you want to delete this employee?')) {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api/v1'}/employees/${employeeId}`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/employees/${employeeId}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,

@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { ShieldAlert } from 'lucide-react';
 import { hrManagerNavigation, type Permission } from './Sidebar/sidebar.config';
 import { getCurrentManagerId, loadManagerPermissions } from '@/lib/permissions';
 
@@ -27,22 +28,34 @@ function collectPermissionsFromPath(path: string): Permission[] {
   return perms;
 }
 
-export default function PermissionGuard({ children }: { children: React.ReactNode }) {
+export function PermissionGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [accessDenied, setAccessDenied] = useState(false);
 
   useEffect(() => {
-    if (!pathname?.startsWith('/dashboard/hr_manager')) return;
+    if (!pathname?.includes('/dashboard/hr_manager')) {
+      setAccessDenied(false);
+      return;
+    }
 
     const managerId = getCurrentManagerId();
-    const allowed = loadManagerPermissions(managerId);
-    const required = collectPermissionsFromPath(pathname);
+    if (!managerId) {
+      setAccessDenied(false);
+      return;
+    }
 
-    const hasAccess = required.length === 0 || required.some((p) => allowed.includes(p));
+    const requiredPerms = collectPermissionsFromPath(pathname);
+    if (requiredPerms.length === 0) {
+      setAccessDenied(false);
+      return;
+    }
+
+    const userPerms = loadManagerPermissions(managerId);
+    const hasAccess = requiredPerms.every((p) => userPerms.includes(p));
+
     if (!hasAccess) {
       if (pathname === FALLBACK_PATH) {
-        /* Already at fallback – show access denied instead of looping */
         setAccessDenied(true);
       } else {
         router.replace(FALLBACK_PATH);
@@ -56,7 +69,7 @@ export default function PermissionGuard({ children }: { children: React.ReactNod
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-6">
         <div className="h-16 w-16 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center mb-4">
-          <span className="text-2xl">🚫</span>
+          <ShieldAlert className="h-8 w-8 text-red-600 dark:text-red-400" />
         </div>
         <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-50">Access Denied</h2>
         <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2 max-w-sm">

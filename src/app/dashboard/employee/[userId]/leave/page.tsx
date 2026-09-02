@@ -31,16 +31,16 @@ interface LeaveRequest {
 export default function EmployeeLeave() {
   const params = useParams();
   const userId = params.userId as string;
-  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api/v1';
+  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || '';
   const [loading, setLoading] = useState(true);
   const [leaves, setLeaves] = useState<LeaveRequest[]>([]);
   const [leaveBalance, setLeaveBalance] = useState<LeaveBalanceState>({
-    availableCL: 12,
-    availablePL: 15,
-    availableSL: 8,
-    totalCL: 12,
-    totalPL: 15,
-    totalSL: 8,
+    availableCL: 6,
+    availablePL: 6,
+    availableSL: 4,
+    totalCL: 6,
+    totalPL: 6,
+    totalSL: 4,
     usedCL: 0,
     usedPL: 0,
     usedSL: 0,
@@ -144,7 +144,7 @@ export default function EmployeeLeave() {
       });
 
       const data = await response.json();
-      
+
       if (data.success) {
         setShowApplyForm(false);
         setFormData({ leaveType: 'Casual Leave', fromDate: '', toDate: '', reason: '' });
@@ -214,7 +214,7 @@ export default function EmployeeLeave() {
             CL and PL balances are dynamically configured from SuperAdmin database policies.
           </p>
         </div>
-        <button 
+        <button
           onClick={() => setShowApplyForm(!showApplyForm)}
           className="flex items-center gap-2 px-4 py-2 bg-[#94cb3d] text-white text-xs font-semibold rounded-lg hover:bg-[#7ab52f] transition-colors"
         >
@@ -284,7 +284,7 @@ export default function EmployeeLeave() {
         <div className="bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 p-6 shadow-sm">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-50">Apply for Leave</h2>
-            <button 
+            <button
               onClick={() => setShowApplyForm(false)}
               className="text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
             >
@@ -375,12 +375,11 @@ export default function EmployeeLeave() {
             leaves.map((leave) => (
               <div key={leave._id} className="flex items-center justify-between p-4 border border-zinc-200 dark:border-zinc-700 rounded-lg">
                 <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    leave.status === 'Approved' ? 'bg-green-100 dark:bg-green-900/30' :
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${leave.status === 'Approved' ? 'bg-green-100 dark:bg-green-900/30' :
                     leave.status === 'Rejected' ? 'bg-red-100 dark:bg-red-900/30' :
-                    leave.status === 'Cancel Requested' ? 'bg-orange-100 dark:bg-orange-900/30' :
-                    'bg-yellow-100 dark:bg-yellow-900/30'
-                  }`}>
+                      leave.status === 'Cancel Requested' ? 'bg-orange-100 dark:bg-orange-900/30' :
+                        'bg-yellow-100 dark:bg-yellow-900/30'
+                    }`}>
                     {leave.status === 'Approved' ? (
                       <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
                     ) : leave.status === 'Rejected' ? (
@@ -400,15 +399,14 @@ export default function EmployeeLeave() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
-                    leave.status === 'Approved'
-                      ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                      : leave.status === 'Rejected'
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${leave.status === 'Approved'
+                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                    : leave.status === 'Rejected'
                       ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
                       : leave.status === 'Cancel Requested'
-                      ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400'
-                      : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
-                  }`}>
+                        ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400'
+                        : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                    }`}>
                     {leave.status}
                   </span>
                   {(leave.status === 'Pending' || leave.status === 'Approved') && (

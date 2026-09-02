@@ -1,4 +1,4 @@
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api/v1';
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 let isRefreshing = false;
 let refreshSubscribers: ((token: string) => void)[] = [];

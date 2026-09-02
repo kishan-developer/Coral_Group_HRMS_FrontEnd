@@ -32,7 +32,7 @@ interface AttendanceRecord {
 export default function EmployeeAttendancePage() {
   const params = useParams();
   const userId = params.userId as string;
-  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api/v1';
+  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);

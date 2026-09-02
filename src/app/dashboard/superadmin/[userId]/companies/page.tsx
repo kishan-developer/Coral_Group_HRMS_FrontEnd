@@ -49,7 +49,7 @@ export default function CompaniesList() {
   const fetchCompanies = async () => {
     try {
       setLoading(true);
-      const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api/v1';
+      const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || '';
       const response = await fetch(`${BACKEND_URL}/companies`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -121,7 +121,7 @@ export default function CompaniesList() {
 
   const handleStatusChange = async (companyId: string, newStatus: string) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api/v1'}/companies/${companyId}/status`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/companies/${companyId}/status`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -140,7 +140,7 @@ export default function CompaniesList() {
   const handleDelete = async (companyId: string) => {
     if (confirm('Are you sure you want to delete this company record?')) {
       try {
-        await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api/v1'}/companies/${companyId}`, {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/companies/${companyId}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -288,7 +288,7 @@ export default function CompaniesList() {
                       <td className="px-4 py-3.5">
                         <div className="flex items-center gap-3">
                           <div className="h-9 w-9 rounded-full bg-[#94cb3d]/15 border border-[#94cb3d]/30 flex items-center justify-center font-bold text-xs text-[#94cb3d] shrink-0">
-                            🏢
+                            <Building2 className="h-4 w-4 text-[#94cb3d]" />
                           </div>
                           <div>
                             <p className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">

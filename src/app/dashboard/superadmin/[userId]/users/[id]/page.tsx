@@ -31,7 +31,7 @@ export default function UserView() {
   const router = useRouter();
   const adminUserId = params.userId as string;
   const userId = params.id as string;
-  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api/v1';
+  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || '';
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -39,14 +39,23 @@ export default function UserView() {
     const fetchUser = async () => {
       try {
         const token = getToken();
-        const response = await fetch(`${BACKEND_URL}/api/v1/users/${userId}`, {
+        const getApiUrl = (path: string) => {
+          const envUrl = process.env.NEXT_PUBLIC_API_URL || '';
+          let base = envUrl.trim().replace(/\/+$/, '');
+          if (!base.endsWith('/api/v1')) {
+            base = base.endsWith('/api') ? `${base}/v1` : `${base}/api/v1`;
+          }
+          return `${base}/${path.replace(/^\/+/, '')}`;
+        };
+
+        const response = await fetch(getApiUrl(`users/${userId}`), {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
         });
         const data = await response.json();
         
-        if (data.success) {
+        if (data.success && data.data) {
           setUser(data.data);
         } else {
           console.error('Failed to fetch user:', data.message);

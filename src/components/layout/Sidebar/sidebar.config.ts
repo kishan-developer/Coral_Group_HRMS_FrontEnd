@@ -80,11 +80,11 @@ export const superadminNavigation: NavItem[] = [
     children: [
       { name: 'Dashboard', href: '/dashboard/superadmin/:userId/overview', icon: LayoutDashboard, pageId: 'dashboard' },
       { name: 'All Employees', href: '/dashboard/superadmin/:userId/users', icon: Users, pageId: 'users' },
-      { name: 'Employee Profile', href: '/dashboard/superadmin/:userId/employees', icon: Users, pageId: 'employees' },
-      { name: 'Add / Edit Employee', href: '/dashboard/superadmin/:userId/users/create', icon: UserPlus, pageId: 'users-create' },
+
+
       { name: 'Onboarding & Lifecycle', href: '/dashboard/hr_manager/:userId/onboarding', icon: Briefcase, pageId: 'onboarding' },
-      { name: 'Employee Requests', href: '/dashboard/superadmin/:userId/approvals', icon: ClipboardCheck, pageId: 'approvals' },
-      { name: 'Reports', href: '/dashboard/superadmin/:userId/reports', icon: BarChart3, pageId: 'reports' },
+
+
     ],
   },
   {
@@ -130,27 +130,14 @@ export const superadminNavigation: NavItem[] = [
     ],
   },
   {
-    name: 'Security',
-    href: '/dashboard/superadmin/:userId/security',
-    icon: ShieldCheck,
-    children: [
-      { name: 'Security', href: '/dashboard/superadmin/:userId/security', icon: ShieldCheck, pageId: 'security' },
-    ],
-  },
-  {
-    name: 'Custom Leave Setup',
-    href: '/dashboard/superadmin/:userId/leave-setup',
-    icon: ClipboardList,
-    pageId: 'leave-setup',
-  },
-  {
     name: 'Settings',
     href: '/dashboard/superadmin/:userId/settings',
     icon: Settings,
     children: [
-      { name: 'Settings', href: '/dashboard/superadmin/:userId/settings', icon: Settings, pageId: 'settings' },
+      { name: 'General Settings', href: '/dashboard/superadmin/:userId/settings', icon: Settings, pageId: 'settings' },
+      { name: 'Security Center', href: '/dashboard/superadmin/:userId/security', icon: ShieldCheck, pageId: 'security' },
       { name: 'Leave Setup', href: '/dashboard/superadmin/:userId/leave-setup', icon: ClipboardList, pageId: 'leave-setup' },
-      { name: 'Subscriptions', href: '/dashboard/superadmin/:userId/subscriptions', icon: Monitor, pageId: 'subscriptions' },
+      // { name: 'Subscriptions', href: '/dashboard/superadmin/:userId/subscriptions', icon: Monitor, pageId: 'subscriptions' },
     ],
   },
 ];
@@ -196,7 +183,7 @@ export const hrManagerNavigation: NavItem[] = [
     permission: 'attendance',
     children: [
       { name: 'Attendance', href: '/dashboard/hr_manager/:userId/attendance', icon: Clock },
-      { name: 'Overtime', href: '/dashboard/hr_manager/:userId/attendance/overtime', icon: Clock },
+
     ],
   },
   {
@@ -241,16 +228,16 @@ export const hrManagerNavigation: NavItem[] = [
       { name: 'Interview', href: '/dashboard/hr_manager/:userId/recruitment/interview', icon: ClipboardList },
     ],
   },
-  {
-    name: 'Training',
-    href: '/dashboard/hr_manager/:userId/training',
-    icon: GraduationCap,
-    permission: 'training',
-    children: [
-      { name: 'Training', href: '/dashboard/hr_manager/:userId/training', icon: GraduationCap },
-      { name: 'Assign', href: '/dashboard/hr_manager/:userId/training/assign', icon: Users },
-    ],
-  },
+  // {
+  //   name: 'Training',
+  //   href: '/dashboard/hr_manager/:userId/training',
+  //   icon: GraduationCap,
+  //   permission: 'training',
+  //   children: [
+  //     { name: 'Training', href: '/dashboard/hr_manager/:userId/training', icon: GraduationCap },
+  //     { name: 'Assign', href: '/dashboard/hr_manager/:userId/training/assign', icon: Users },
+  //   ],
+  // },
   {
     name: 'Assets',
     href: '/dashboard/hr_manager/:userId/assets',
@@ -261,17 +248,17 @@ export const hrManagerNavigation: NavItem[] = [
       { name: 'Approvals', href: '/dashboard/hr_manager/:userId/assets/approvals', icon: ClipboardList },
     ],
   },
-  {
-    name: 'Reports',
-    href: '/dashboard/hr_manager/:userId/reports/attendance',
-    icon: BarChart3,
-    permission: 'reports',
-    children: [
-      { name: 'Attendance', href: '/dashboard/hr_manager/:userId/reports/attendance', icon: Clock },
-      { name: 'Leave', href: '/dashboard/hr_manager/:userId/reports/leave', icon: ClipboardList },
-      { name: 'Performance', href: '/dashboard/hr_manager/:userId/reports/performance', icon: Target },
-    ],
-  },
+  // {
+  //   name: 'Reports',
+  //   href: '/dashboard/hr_manager/:userId/reports/attendance',
+  //   icon: BarChart3,
+  //   permission: 'reports',
+  //   children: [
+  //     { name: 'Attendance', href: '/dashboard/hr_manager/:userId/reports/attendance', icon: Clock },
+  //     { name: 'Leave', href: '/dashboard/hr_manager/:userId/reports/leave', icon: ClipboardList },
+  //     { name: 'Performance', href: '/dashboard/hr_manager/:userId/reports/performance', icon: Target },
+  //   ],
+  // },
 ];
 
 export const accountsNavigation: NavItem[] = [
@@ -344,21 +331,21 @@ export const supportNavigation: NavItem[] = [
     href: '/dashboard/support/:userId/live-chat',
     icon: MessageSquare,
   },
-  {
-    name: 'Knowledge Base',
-    href: '/dashboard/support/:userId/knowledge-base',
-    icon: BookOpen,
-  },
-  {
-    name: 'Technical Requests',
-    href: '/dashboard/support/:userId/technical',
-    icon: Wrench,
-  },
-  {
-    name: 'Announcements',
-    href: '/dashboard/support/:userId/announcements',
-    icon: Megaphone,
-  },
+  // {
+  //   name: 'Knowledge Base',
+  //   href: '/dashboard/support/:userId/knowledge-base',
+  //   icon: BookOpen,
+  // },
+  // {
+  //   name: 'Technical Requests',
+  //   href: '/dashboard/support/:userId/technical',
+  //   icon: Wrench,
+  // },
+  // {
+  //   name: 'Announcements',
+  //   href: '/dashboard/support/:userId/announcements',
+  //   icon: Megaphone,
+  // },
   {
     name: 'Reports',
     href: '/dashboard/support/:userId/reports',
@@ -375,7 +362,7 @@ export const supportNavigation: NavItem[] = [
     icon: Users,
     children: [
       { name: 'Employee List', href: '/dashboard/support/:userId/users', icon: Users },
-      { name: 'Employee Overview', href: '/dashboard/support/:userId/users', icon: Users },
+
     ],
   },
 ];

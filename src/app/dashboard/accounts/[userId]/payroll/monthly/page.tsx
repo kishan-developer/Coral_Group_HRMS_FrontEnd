@@ -38,7 +38,7 @@ export default function PayrollMonthlyPage() {
   const params = useParams();
   const router = useRouter();
   const userId = params.userId as string;
-  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api/v1';
+  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
   const [selectedMonth, setSelectedMonth] = useState('June 2026');
   const [selectedDepartment, setSelectedDepartment] = useState('All');

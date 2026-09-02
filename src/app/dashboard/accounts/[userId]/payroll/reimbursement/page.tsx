@@ -42,7 +42,7 @@ export default function PayrollReimbursementPage() {
   const params = useParams();
   const router = useRouter();
   const userId = params.userId as string;
-  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api/v1';
+  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
   const [expenses, setExpenses] = useState<Expense[]>([
     { id: '1', employeeId: 'EMP001', employeeName: 'John Smith', employeeEmail: 'john.smith@coralgroup.com', department: 'Engineering', type: 'Travel', description: 'Client meeting travel expenses - Mumbai to Delhi', amount: 15000, date: '2026-06-15', status: 'Pending' },

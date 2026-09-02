@@ -33,7 +33,7 @@ export default function EmployeeEdit() {
 
   const fetchEmployee = async () => {
     try {
-      const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api/v1';
+      const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || '';
       const response = await fetch(`${BACKEND_URL}/employees/${id}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -53,7 +53,7 @@ export default function EmployeeEdit() {
 
   const handleSave = async () => {
     try {
-      const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api/v1';
+      const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || '';
       const response = await fetch(`${BACKEND_URL}/employees/${id}`, {
         method: 'PUT',
         headers: {

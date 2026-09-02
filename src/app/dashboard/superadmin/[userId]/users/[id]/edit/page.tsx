@@ -33,7 +33,7 @@ export default function UserEdit() {
   const router = useRouter();
   const adminUserId = params.userId as string;
   const userId = params.id as string;
-  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api/v1';
+  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || '';
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -46,32 +46,41 @@ export default function UserEdit() {
     lastName: '',
     company: '',
     department: '',
-    avatar: '👨‍💼',
+    avatar: 'executive',
   });
+
+  const getApiUrl = (path: string) => {
+    const envUrl = process.env.NEXT_PUBLIC_API_URL || '';
+    let base = envUrl.trim().replace(/\/+$/, '');
+    if (!base.endsWith('/api/v1')) {
+      base = base.endsWith('/api') ? `${base}/v1` : `${base}/api/v1`;
+    }
+    return `${base}/${path.replace(/^\/+/, '')}`;
+  };
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
         const token = getToken();
-        const response = await fetch(`${BACKEND_URL}/api/v1/users/${userId}`, {
+        const response = await fetch(getApiUrl(`users/${userId}`), {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
         });
         const data = await response.json();
         
-        if (data.success) {
+        if (data.success && data.data) {
           setUser(data.data);
           setFormData({
-            email: data.data.email,
+            email: data.data.email || '',
             employeeId: data.data.employeeId || '',
-            role: data.data.role,
-            isActive: data.data.isActive,
-            firstName: data.data.employeeDetails?.firstName || '',
-            lastName: data.data.employeeDetails?.lastName || '',
-            company: data.data.employeeDetails?.company || '',
-            department: data.data.employeeDetails?.department || '',
-            avatar: data.data.avatar || '👨‍💼',
+            role: data.data.role || 'employee',
+            isActive: data.data.isActive ?? true,
+            firstName: data.data.employeeDetails?.firstName || data.data.firstName || '',
+            lastName: data.data.employeeDetails?.lastName || data.data.lastName || '',
+            company: data.data.employeeDetails?.company || data.data.companyId || '',
+            department: data.data.employeeDetails?.department || data.data.department || '',
+            avatar: data.data.avatar || 'executive',
           });
         } else {
           console.error('Failed to fetch user:', data.message);
@@ -92,7 +101,7 @@ export default function UserEdit() {
 
     try {
       const token = getToken();
-      const response = await fetch(`${BACKEND_URL}/api/v1/users/${userId}`, {
+      const response = await fetch(getApiUrl(`users/${userId}`), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -103,12 +112,15 @@ export default function UserEdit() {
           employeeId: formData.employeeId,
           role: formData.role,
           isActive: formData.isActive,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          department: formData.department,
         }),
       });
 
       const data = await response.json();
 
-      if (data.success) {
+      if (data.success || response.ok) {
         router.push(`/dashboard/superadmin/${adminUserId}/users/${userId}`);
       } else {
         console.error('Failed to update user:', data.message);

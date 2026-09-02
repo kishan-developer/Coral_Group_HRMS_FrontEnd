@@ -32,7 +32,7 @@ export default function TeamPage() {
 
   const fetchTeamMembers = async () => {
     try {
-      const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api/v1';
+      const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || '';
       const response = await fetch(`${BACKEND_URL}/employees`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -52,7 +52,7 @@ export default function TeamPage() {
   const handleDelete = async (memberId: string) => {
     if (confirm('Are you sure you want to delete this team member?')) {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api/v1'}/employees/${memberId}`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/employees/${memberId}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,

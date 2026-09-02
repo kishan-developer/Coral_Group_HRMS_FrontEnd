@@ -16,7 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
 export default function SupportReportsPage() {
-  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api/v1';
+  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || '';
   const [activeTab, setActiveTab] = useState<string>('tickets');
   const [reportsData, setReportsData] = useState<any>(null);
   const [loading, setLoading] = useState(true);

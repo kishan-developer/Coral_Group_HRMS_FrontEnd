@@ -57,7 +57,7 @@ export default function Sidebar({ fixedRole }: { fixedRole?: Role } = {}) {
         if (!userId) return;
         
         const token = getToken();
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api/v1'}/api/v1/access-control/user-permissions/${userId}`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/v1/access-control/user-permissions/${userId}`, {
           headers: { 'Authorization': `Bearer ${token}` },
         });
         

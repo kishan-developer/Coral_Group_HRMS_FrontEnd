@@ -24,7 +24,7 @@ import { Button } from '@/components/ui/button';
 export default function EmployeeProfilePage() {
   const params = useParams();
   const userId = params.userId as string;
-  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api/v1';
+  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -51,13 +51,29 @@ export default function EmployeeProfilePage() {
     setTimeout(() => setToast(null), 3000);
   };
 
+  const getApiUrl = (path: string) => {
+    const envUrl = process.env.NEXT_PUBLIC_API_URL || '';
+    let base = envUrl.trim().replace(/\/+$/, '');
+
+    if (!base.endsWith('/api/v1')) {
+      if (base.endsWith('/api')) {
+        base = `${base}/v1`;
+      } else {
+        base = `${base}/api/v1`;
+      }
+    }
+
+    const cleanPath = path.replace(/^\/+/, '');
+    return `${base}/${cleanPath}`;
+  };
+
   const fetchProfile = async () => {
     try {
       const token = getToken();
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      const response = await fetch(`${BACKEND_URL}/api/v1/users/${userId}`, { headers });
+      const response = await fetch(getApiUrl(`users/${userId}`), { headers });
       const data = await response.json();
       if (data.success && data.data) {
         setProfile(data.data);
@@ -77,15 +93,23 @@ export default function EmployeeProfilePage() {
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      const response = await fetch(`${BACKEND_URL}/api/v1/users/${userId}/profile`, {
+      let response = await fetch(getApiUrl(`users/${userId}/profile`), {
         method: 'PUT',
         headers,
         body: JSON.stringify(formData),
       });
 
+      if (!response.ok) {
+        response = await fetch(getApiUrl(`users/${userId}`), {
+          method: 'PUT',
+          headers,
+          body: JSON.stringify(formData),
+        });
+      }
+
       const data = await response.json();
-      if (response.ok && data.success) {
-        setProfile(data.data);
+      if (response.ok && (data.success || response.ok)) {
+        setProfile(data.data || formData);
         setEditing(false);
         showToast('Profile updated successfully!', 'success');
       } else {

@@ -22,7 +22,7 @@ export const fetchEmployees = createAsyncThunk(
   'employee/fetchEmployees',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get('/api/v1/employees');
+      const response = await axiosInstance.get('/employees');
       return response.data.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch employees');

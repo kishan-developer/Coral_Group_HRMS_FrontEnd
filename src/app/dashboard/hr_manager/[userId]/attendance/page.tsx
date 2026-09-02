@@ -7,7 +7,6 @@ import AttendanceFilters, { AttendanceFilterState } from './components/Attendanc
 import AttendanceSummaryWidgets from './components/AttendanceSummaryWidgets';
 import LiveAttendanceStatus from './components/LiveAttendanceStatus';
 import QuickActionsPanel from './components/QuickActionsPanel';
-import ActivityTimeline from './components/ActivityTimeline';
 import WeeklyTrendChart from './components/WeeklyTrendChart';
 import HourlyPunchChart from './components/HourlyPunchChart';
 import DepartmentBreakdownChart from './components/DepartmentBreakdownChart';
@@ -74,13 +73,8 @@ export default function AttendanceDashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <div className="xl:col-span-2">
-          <LiveAttendanceStatus key={refreshKey} />
-        </div>
-        <div>
-          <ActivityTimeline />
-        </div>
+      <div>
+        <LiveAttendanceStatus key={refreshKey} />
       </div>
 
       <MarkAttendanceModal isOpen={markOpen} onClose={() => setMarkOpen(false)} />

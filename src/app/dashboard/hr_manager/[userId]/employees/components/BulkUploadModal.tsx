@@ -21,7 +21,7 @@ export default function BulkUploadModal({ isOpen, onClose, onUploadComplete }: B
   const [isProcessing, setIsProcessing] = useState(false);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
   const [uploadResults, setUploadResults] = useState<{ success: any[]; failed: ValidationError[] } | null>(null);
-  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5001/api/v1';
+  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
   if (!isOpen) return null;
 

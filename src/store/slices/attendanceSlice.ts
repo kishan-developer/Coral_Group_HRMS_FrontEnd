@@ -22,7 +22,7 @@ export const markCheckIn = createAsyncThunk(
   'attendance/markCheckIn',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.post('/api/v1/attendance/check-in');
+      const response = await axiosInstance.post('/attendance/check-in');
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Check-in failed');

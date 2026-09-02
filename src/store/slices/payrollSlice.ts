@@ -26,7 +26,7 @@ export const fetchPayslips = createAsyncThunk(
   'payroll/fetchPayslips',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get('/api/v1/payslips');
+      const response = await axiosInstance.get('/payslips');
       return response.data.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch payslips');
