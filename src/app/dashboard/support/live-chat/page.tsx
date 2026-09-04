@@ -177,7 +177,7 @@ export default function LiveChatPage() {
     setChats((prev) =>
       prev.map((c) => (c.id === chat.id || c._id === chat._id ? { ...c, status: 'Closed' } : c))
     );
-    if (selectedChat?.id === chat.id || selectedChat?._id === chat._id) {
+    if (selectedChat && (selectedChat.id === chat.id || selectedChat._id === chat._id)) {
       setSelectedChat({ ...selectedChat, status: 'Closed' });
     }
     showToast('Chat session closed', 'info');

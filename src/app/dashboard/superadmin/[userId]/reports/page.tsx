@@ -28,7 +28,6 @@ import {
   ChevronRight,
   Send,
   AlertCircle,
-  Activity,
   Layers,
   ArrowUpRight,
   PieChart as PieChartIcon,

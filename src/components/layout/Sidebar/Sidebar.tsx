@@ -56,6 +56,7 @@ export default function Sidebar({ fixedRole }: { fixedRole?: Role } = {}) {
         const userId = getCurrentUserId();
         if (!userId) return;
         
+        const token = getToken();
         const apiBase = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/api\/v1\/?$/, '');
         const response = await fetch(`${apiBase}/api/v1/access-control/user-permissions/${userId}`, {
           headers: { 'Authorization': `Bearer ${token}` },

@@ -27,7 +27,6 @@ import {
   Check,
   X,
   AlertTriangle,
-  Zap,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
