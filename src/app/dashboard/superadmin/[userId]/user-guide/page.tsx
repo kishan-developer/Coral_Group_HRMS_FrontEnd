@@ -12,7 +12,7 @@ import {
   ZoomIn,
   ZoomOut,
   RotateCcw,
-  Sparkles,
+  Zap,
   ArrowRight,
   Lock,
   Building2,
@@ -374,7 +374,7 @@ export default function AdvancedMindMapUserGuide() {
       {/* Toast Notification Alert */}
       {toast && (
         <div className="fixed top-5 right-5 z-50 px-5 py-3 rounded-xl bg-zinc-900 text-white font-medium text-xs flex items-center gap-2.5 shadow-2xl border border-zinc-700 animate-in fade-in slide-in-from-top-4">
-          <Sparkles className="h-4 w-4 text-[#94cb3d]" />
+          <Zap className="h-4 w-4 text-[#94cb3d]" />
           <span>{toast.message}</span>
         </div>
       )}

@@ -19,7 +19,7 @@ export interface EmployeeBalanceItem {
 }
 
 export default function EmployeeLeaveBalance() {
-  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || '';
+  const BACKEND_URL = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/api\/v1\/?$/, '');
 
   const [loading, setLoading] = useState(false);
   const [accrualRunning, setAccrualRunning] = useState(false);

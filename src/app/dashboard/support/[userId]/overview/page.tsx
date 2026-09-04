@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
   LifeBuoy,
@@ -27,19 +27,21 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { getToken } from '@/lib/auth';
 
 export interface SupportTicket {
   id: string;
   ticketCode: string;
   subject: string;
-  category: 'IT Support' | 'Payroll & Tax' | 'System Bug' | 'Access Control' | 'General HR';
+  category: string;
   requesterName: string;
   requesterEmail: string;
   requesterRole: string;
-  priority: 'Urgent' | 'High' | 'Medium' | 'Low';
-  status: 'Open' | 'In Progress' | 'Resolved' | 'Pending User';
+  priority: string;
+  status: string;
   createdAt: string;
   assignedAgent?: string;
+  rawId?: string;
 }
 
 export interface ChatQueueSession {
@@ -47,7 +49,7 @@ export interface ChatQueueSession {
   userName: string;
   userEmail: string;
   userRole: string;
-  status: 'Active' | 'Waiting' | 'Closed';
+  status: string;
   lastMessage: string;
   waitTime: string;
   unreadCount: number;
@@ -68,7 +70,7 @@ export interface SupportAnnouncement {
   id: string;
   title: string;
   content: string;
-  type: 'General' | 'Urgent' | 'Information' | 'Policy Update';
+  type: string;
   targetAudience: string;
   createdAt: string;
   author: string;
@@ -80,6 +82,7 @@ export default function SupportDashboardOverview() {
   const params = useParams();
   const router = useRouter();
   const userId = params.userId as string;
+  const BACKEND_URL = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/api\/v1\/?$/, '');
 
   const [activeTab, setActiveTab] = useState<SupportTab>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -87,11 +90,12 @@ export default function SupportDashboardOverview() {
   const [kbCategoryFilter, setKbCategoryFilter] = useState<string>('All');
   const [createTicketModal, setCreateTicketModal] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' } | null>(null);
+  const [loading, setLoading] = useState(false);
 
   // Form states for creating new ticket
   const [newSubject, setNewSubject] = useState('');
-  const [newCategory, setNewCategory] = useState<SupportTicket['category']>('IT Support');
-  const [newPriority, setNewPriority] = useState<SupportTicket['priority']>('Medium');
+  const [newCategory, setNewCategory] = useState<string>('IT Support');
+  const [newPriority, setNewPriority] = useState<string>('Medium');
 
   // Settings state
   const [slaResponseTime, setSlaResponseTime] = useState('15 mins');
@@ -263,37 +267,150 @@ export default function SupportDashboardOverview() {
     },
   ]);
 
+  // Fetch Live Data from Backend API
+  const fetchDashboardData = async () => {
+    setLoading(true);
+    try {
+      const token = getToken();
+      const headers = { Authorization: `Bearer ${token}` };
+
+      // 1. Tickets
+      const tRes = await fetch(`${BACKEND_URL}/api/v1/support/tickets`, { headers });
+      const tData = await tRes.json();
+      if (tData.success && Array.isArray(tData.data) && tData.data.length > 0) {
+        setTickets(
+          tData.data.map((item: any) => ({
+            id: item._id || item.ticketId,
+            rawId: item._id,
+            ticketCode: item.ticketId || `TICK-${item._id.substring(0, 5)}`,
+            subject: item.title || item.subject,
+            category: item.category || 'General',
+            requesterName: item.createdBy?.firstName ? `${item.createdBy.firstName} ${item.createdBy.lastName}` : item.createdBy || 'User',
+            requesterEmail: item.createdBy?.email || 'user@coral.com',
+            requesterRole: 'Employee',
+            priority: item.priority || 'Medium',
+            status: item.status || 'Open',
+            createdAt: item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'Today',
+            assignedAgent: item.assignedTo?.firstName ? `${item.assignedTo.firstName} ${item.assignedTo.lastName}` : 'Unassigned',
+          }))
+        );
+      }
+
+      // 2. Knowledge Base
+      const kbRes = await fetch(`${BACKEND_URL}/api/v1/support/knowledge-base`, { headers });
+      const kbData = await kbRes.json();
+      if (kbData.success && Array.isArray(kbData.data) && kbData.data.length > 0) {
+        setKbArticles(
+          kbData.data.map((item: any) => ({
+            id: item._id || item.articleId,
+            title: item.title,
+            category: item.category,
+            views: item.views || 0,
+            helpfulCount: item.helpfulCount || 0,
+            author: item.author?.firstName ? `${item.author.firstName} ${item.author.lastName}` : item.author || 'Support',
+            updatedAt: item.updatedAt ? new Date(item.updatedAt).toLocaleDateString() : 'Recent',
+            summary: item.content?.substring(0, 100) || item.title,
+          }))
+        );
+      }
+
+      // 3. Announcements
+      const annRes = await fetch(`${BACKEND_URL}/api/v1/support/announcements`, { headers });
+      const annData = await annRes.json();
+      if (annData.success && Array.isArray(annData.data) && annData.data.length > 0) {
+        setAnnouncements(
+          annData.data.map((item: any) => ({
+            id: item._id || item.announcementId,
+            title: item.title,
+            content: item.content,
+            type: item.type || 'General',
+            targetAudience: item.targetAudience || 'All',
+            createdAt: item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'Today',
+            author: item.createdBy?.firstName ? `${item.createdBy.firstName} ${item.createdBy.lastName}` : item.createdBy || 'Admin',
+          }))
+        );
+      }
+    } catch (err) {
+      console.log('Using local fallback support dataset');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [BACKEND_URL]);
+
   const showToast = (message: string, type: 'success' | 'info') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   };
 
-  const handleStatusChange = (id: string, newStatus: SupportTicket['status']) => {
+  const handleStatusChange = async (id: string, newStatus: string) => {
+    try {
+      const token = getToken();
+      const target = tickets.find((t) => t.id === id);
+      if (target && target.rawId) {
+        await fetch(`${BACKEND_URL}/api/v1/support/tickets/${target.rawId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ status: newStatus }),
+        });
+      }
+    } catch (e) {
+      console.error(e);
+    }
+
     setTickets((prev) =>
       prev.map((t) => (t.id === id ? { ...t, status: newStatus } : t))
     );
     showToast(`Ticket status updated to "${newStatus}"`, 'success');
   };
 
-  const handleCreateTicket = (e: React.FormEvent) => {
+  const handleCreateTicket = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newSubject) return;
 
-    const newTicket: SupportTicket = {
-      id: `st-${Date.now()}`,
-      ticketCode: `TICK-${Math.floor(1000 + Math.random() * 9000)}`,
-      subject: newSubject,
-      category: newCategory,
-      requesterName: 'Bhardwaj Kishan',
-      requesterEmail: 'bhardwajk852@gmail.com',
-      requesterRole: 'Support Specialist',
-      priority: newPriority,
-      status: 'Open',
-      createdAt: new Date().toLocaleString(),
-      assignedAgent: 'Unassigned',
-    };
+    try {
+      const token = getToken();
+      const res = await fetch(`${BACKEND_URL}/api/v1/support/tickets`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          title: newSubject,
+          description: newSubject,
+          category: newCategory,
+          priority: newPriority,
+          createdBy: userId,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        fetchDashboardData();
+      }
+    } catch (e) {
+      const newTicket: SupportTicket = {
+        id: `st-${Date.now()}`,
+        ticketCode: `TICK-${Math.floor(1000 + Math.random() * 9000)}`,
+        subject: newSubject,
+        category: newCategory,
+        requesterName: 'Bhardwaj Kishan',
+        requesterEmail: 'bhardwajk852@gmail.com',
+        requesterRole: 'Support Specialist',
+        priority: newPriority,
+        status: 'Open',
+        createdAt: new Date().toLocaleString(),
+        assignedAgent: 'Unassigned',
+      };
+      setTickets([newTicket, ...tickets]);
+    }
 
-    setTickets([newTicket, ...tickets]);
     setCreateTicketModal(false);
     setNewSubject('');
     showToast('Support ticket created successfully!', 'success');
@@ -312,7 +429,7 @@ export default function SupportDashboardOverview() {
 
       if (activeTab === 'technical') {
         const isTechCategory =
-          t.category === 'IT Support' || t.category === 'System Bug' || t.category === 'Access Control';
+          t.category === 'IT Support' || t.category === 'System Bug' || t.category === 'Access Control' || t.category === 'Technical';
         return matchesSearch && matchesStatus && isTechCategory;
       }
 
@@ -322,7 +439,7 @@ export default function SupportDashboardOverview() {
 
   const technicalTicketsCount = useMemo(() => {
     return tickets.filter(
-      (t) => t.category === 'IT Support' || t.category === 'System Bug' || t.category === 'Access Control'
+      (t) => t.category === 'IT Support' || t.category === 'System Bug' || t.category === 'Access Control' || t.category === 'Technical'
     ).length;
   }, [tickets]);
 
@@ -640,9 +757,7 @@ export default function SupportDashboardOverview() {
         </Card>
       )}
 
-      {/* ========================================================================= */}
       {/* TAB 2: LIVE CHAT QUEUE */}
-      {/* ========================================================================= */}
       {activeTab === 'chat' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between bg-white dark:bg-zinc-900 p-4 rounded-lg border border-zinc-200/80 dark:border-zinc-800">
@@ -707,9 +822,7 @@ export default function SupportDashboardOverview() {
         </div>
       )}
 
-      {/* ========================================================================= */}
       {/* TAB 3: TECHNICAL REQUESTS */}
-      {/* ========================================================================= */}
       {activeTab === 'technical' && (
         <Card className="rounded-lg">
           <CardContent className="p-0">
@@ -824,9 +937,7 @@ export default function SupportDashboardOverview() {
         </Card>
       )}
 
-      {/* ========================================================================= */}
       {/* TAB 4: KNOWLEDGE BASE */}
-      {/* ========================================================================= */}
       {activeTab === 'kb' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between bg-white dark:bg-zinc-900 p-4 rounded-lg border border-zinc-200/80 dark:border-zinc-800">
@@ -887,9 +998,7 @@ export default function SupportDashboardOverview() {
         </div>
       )}
 
-      {/* ========================================================================= */}
       {/* TAB 5: HELPDESK REPORTS & METRICS */}
-      {/* ========================================================================= */}
       {activeTab === 'reports' && (
         <div className="space-y-6">
           <div className="flex items-center justify-between bg-white dark:bg-zinc-900 p-4 rounded-lg border border-zinc-200/80 dark:border-zinc-800">
@@ -914,7 +1023,7 @@ export default function SupportDashboardOverview() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card className="p-4 rounded-xl space-y-1">
               <p className="text-xs text-zinc-500">Total Support Requests</p>
-              <h3 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">5</h3>
+              <h3 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">{tickets.length}</h3>
               <p className="text-[10px] text-emerald-600 font-semibold">+12% vs last week</p>
             </Card>
 
@@ -936,34 +1045,10 @@ export default function SupportDashboardOverview() {
               <p className="text-[10px] text-emerald-600 font-semibold">Based on 48 ratings</p>
             </Card>
           </div>
-
-          <Card className="p-6 rounded-xl space-y-4">
-            <h4 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">Ticket Volume Breakdown by Category</h4>
-            <div className="space-y-3">
-              {[
-                { cat: 'Payroll & Tax', pct: 40, count: 2, color: 'bg-[#94cb3d]' },
-                { cat: 'IT Support', pct: 20, count: 1, color: 'bg-blue-500' },
-                { cat: 'Access Control', pct: 20, count: 1, color: 'bg-purple-500' },
-                { cat: 'System Bug', pct: 20, count: 1, color: 'bg-rose-500' },
-              ].map((item) => (
-                <div key={item.cat} className="space-y-1 text-xs">
-                  <div className="flex justify-between font-medium">
-                    <span>{item.cat} ({item.count} tickets)</span>
-                    <span>{item.pct}%</span>
-                  </div>
-                  <div className="w-full h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                    <div className={`h-full ${item.color}`} style={{ width: `${item.pct}%` }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
         </div>
       )}
 
-      {/* ========================================================================= */}
       {/* TAB 6: ANNOUNCEMENTS */}
-      {/* ========================================================================= */}
       {activeTab === 'announcements' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between bg-white dark:bg-zinc-900 p-4 rounded-lg border border-zinc-200/80 dark:border-zinc-800">
@@ -1013,9 +1098,7 @@ export default function SupportDashboardOverview() {
         </div>
       )}
 
-      {/* ========================================================================= */}
       {/* TAB 7: SETTINGS */}
-      {/* ========================================================================= */}
       {activeTab === 'settings' && (
         <Card className="p-6 rounded-xl space-y-6">
           <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800 pb-4">
@@ -1122,7 +1205,7 @@ export default function SupportDashboardOverview() {
                 </label>
                 <select
                   value={newCategory}
-                  onChange={(e) => setNewCategory(e.target.value as any)}
+                  onChange={(e) => setNewCategory(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-medium text-zinc-900 dark:text-zinc-50"
                 >
                   <option value="IT Support">IT Support</option>
@@ -1139,7 +1222,7 @@ export default function SupportDashboardOverview() {
                 </label>
                 <select
                   value={newPriority}
-                  onChange={(e) => setNewPriority(e.target.value as any)}
+                  onChange={(e) => setNewPriority(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-medium text-zinc-900 dark:text-zinc-50"
                 >
                   <option value="Low">Low Priority</option>

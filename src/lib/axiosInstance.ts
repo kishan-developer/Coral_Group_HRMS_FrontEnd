@@ -31,11 +31,19 @@ const processQueue = (error: unknown, token: string | null = null) => {
 // Request Interceptor: Attach Access Token & Normalize URL
 axiosInstance.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
+    let baseUrl = getApiBaseUrl();
+    if (baseUrl && !baseUrl.endsWith('/')) {
+      baseUrl = `${baseUrl}/`;
+    }
+    config.baseURL = baseUrl;
+
     if (config.url) {
       if (config.url.startsWith('/api/v1/')) {
-        config.url = config.url.replace('/api/v1/', '/');
+        config.url = config.url.replace('/api/v1/', '');
       } else if (config.url.startsWith('api/v1/')) {
-        config.url = config.url.replace('api/v1/', '/');
+        config.url = config.url.replace('api/v1/', '');
+      } else if (config.url.startsWith('/')) {
+        config.url = config.url.substring(1);
       }
     }
 

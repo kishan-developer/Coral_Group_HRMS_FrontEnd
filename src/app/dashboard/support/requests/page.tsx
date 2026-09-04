@@ -13,6 +13,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { getToken } from '@/lib/auth';
 
 interface SupportRequestItem {
   _id?: string;
@@ -28,7 +29,7 @@ interface SupportRequestItem {
 }
 
 export default function SupportRequestsPage() {
-  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || '';
+  const BACKEND_URL = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/api\/v1\/?$/, '');
   const [requests, setRequests] = useState<SupportRequestItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -50,10 +51,26 @@ export default function SupportRequestsPage() {
 
   const fetchRequests = async () => {
     try {
-      const response = await fetch(`${BACKEND_URL}/api/v1/support/requests`);
+      const token = getToken();
+      const response = await fetch(`${BACKEND_URL}/api/v1/support/requests`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await response.json();
-      if (data.success && Array.isArray(data.data)) {
-        setRequests(data.data);
+      if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+        setRequests(
+          data.data.map((item: any) => ({
+            _id: item._id,
+            id: item._id || item.requestId,
+            requestId: item.requestId,
+            subject: item.subject,
+            description: item.description,
+            type: item.type || 'Service',
+            status: item.status || 'Pending',
+            priority: item.priority || 'Medium',
+            createdBy: item.createdBy?.firstName ? `${item.createdBy.firstName} ${item.createdBy.lastName}` : (item.createdBy || 'Employee'),
+            createdAt: item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'Today',
+          }))
+        );
       } else {
         const mock: SupportRequestItem[] = [
           { id: 'REQ-001', subject: 'Profile detail update request', type: 'Service', status: 'Pending', priority: 'Medium', createdBy: 'Alice Smith', createdAt: '2026-08-23' },
@@ -75,12 +92,39 @@ export default function SupportRequestsPage() {
     setTimeout(() => setToast(null), 3000);
   };
 
+  const handleStatusChange = async (reqItem: SupportRequestItem, newStatus: SupportRequestItem['status']) => {
+    try {
+      const token = getToken();
+      if (reqItem._id) {
+        await fetch(`${BACKEND_URL}/api/v1/support/requests/${reqItem._id}/status`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ status: newStatus }),
+        });
+      }
+    } catch (e) {
+      console.error('Status update failed:', e);
+    }
+
+    setRequests((prev) =>
+      prev.map((r) => (r.id === reqItem.id || r._id === reqItem._id ? { ...r, status: newStatus } : r))
+    );
+    showToast(`Request status updated to "${newStatus}"`, 'success');
+  };
+
   const handleCreateRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const token = getToken();
       const response = await fetch(`${BACKEND_URL}/api/v1/support/requests`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify(modalData),
       });
       const data = await response.json();
@@ -163,7 +207,7 @@ export default function SupportRequestsPage() {
               onClick={() => setStatusFilter(st)}
               className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all duration-150 border ${
                 isActive
-                  ? 'bg-[#94cb3d] text-white border-[#94cb3d] shadow-sm'
+                  ? 'bg-[#94cb3d] text-[#ffffff] border-[#94cb3d] shadow-sm'
                   : 'bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50'
               }`}
             >
@@ -218,6 +262,7 @@ export default function SupportRequestsPage() {
                     <th className="px-4 py-3.5 text-xs font-medium text-zinc-500 uppercase">Status</th>
                     <th className="px-4 py-3.5 text-xs font-medium text-zinc-500 uppercase">Created By</th>
                     <th className="px-4 py-3.5 text-xs font-medium text-zinc-500 uppercase">Date</th>
+                    <th className="px-4 py-3.5 text-xs font-medium text-zinc-500 uppercase text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
@@ -266,6 +311,26 @@ export default function SupportRequestsPage() {
                       </td>
                       <td className="px-4 py-3.5 text-xs text-zinc-500 whitespace-nowrap">
                         {r.createdAt}
+                      </td>
+                      <td className="px-4 py-3.5 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {r.status !== 'Completed' && (
+                            <button
+                              onClick={() => handleStatusChange(r, 'Completed')}
+                              className="h-7 px-2.5 rounded-md bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500 hover:text-white text-[11px] font-semibold transition-colors cursor-pointer"
+                            >
+                              Complete
+                            </button>
+                          )}
+                          {r.status === 'Pending' && (
+                            <button
+                              onClick={() => handleStatusChange(r, 'In Review')}
+                              className="h-7 px-2.5 rounded-md bg-blue-500/10 text-blue-600 hover:bg-blue-500 hover:text-white text-[11px] font-semibold transition-colors cursor-pointer"
+                            >
+                              In Review
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}

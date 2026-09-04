@@ -6,16 +6,21 @@ import {
   Search,
   CheckCircle2,
   Bug,
+  Plus,
+  X,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { getToken } from '@/lib/auth';
 
 interface TechnicalIssueItem {
   _id?: string;
   id?: string;
   issueId?: string;
   title: string;
+  description?: string;
   category: string;
   severity: 'Low' | 'Medium' | 'High' | 'Critical';
   status: 'Reported' | 'Investigating' | 'In Progress' | 'Resolved';
@@ -25,12 +30,20 @@ interface TechnicalIssueItem {
 }
 
 export default function TechnicalIssuesPage() {
-  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || '';
+  const BACKEND_URL = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/api\/v1\/?$/, '');
   const [issues, setIssues] = useState<TechnicalIssueItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('All');
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+  const [modalData, setModalData] = useState({
+    title: '',
+    description: '',
+    category: 'Infrastructure',
+    severity: 'High',
+  });
 
   useEffect(() => {
     fetchTechnicalIssues();
@@ -38,10 +51,27 @@ export default function TechnicalIssuesPage() {
 
   const fetchTechnicalIssues = async () => {
     try {
-      const response = await fetch(`${BACKEND_URL}/api/v1/support/technical-issues`);
+      const token = getToken();
+      const response = await fetch(`${BACKEND_URL}/api/v1/support/technical-issues`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await response.json();
-      if (data.success && Array.isArray(data.data)) {
-        setIssues(data.data);
+      if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+        setIssues(
+          data.data.map((item: any) => ({
+            _id: item._id,
+            id: item._id || item.issueId,
+            issueId: item.issueId,
+            title: item.title,
+            description: item.description,
+            category: item.category || 'General',
+            severity: item.severity || 'Medium',
+            status: item.status || 'Reported',
+            reportedBy: item.reportedBy?.firstName ? `${item.reportedBy.firstName} ${item.reportedBy.lastName}` : (item.reportedBy || 'System'),
+            assignedTo: item.assignedTo?.firstName ? `${item.assignedTo.firstName} ${item.assignedTo.lastName}` : 'Unassigned',
+            createdAt: item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'Today',
+          }))
+        );
       } else {
         const mock: TechnicalIssueItem[] = [
           { id: 'ISS-001', title: 'Server high latency - payroll database cluster', category: 'Infrastructure', severity: 'Critical', status: 'In Progress', reportedBy: 'Alice Smith', assignedTo: 'John Doe', createdAt: '2026-08-23' },
@@ -55,6 +85,70 @@ export default function TechnicalIssuesPage() {
       console.error('Failed to fetch technical issues:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const showToast = (message: string, type: 'success' | 'error') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const handleStatusChange = async (issueItem: TechnicalIssueItem, newStatus: TechnicalIssueItem['status']) => {
+    try {
+      const token = getToken();
+      if (issueItem._id) {
+        await fetch(`${BACKEND_URL}/api/v1/support/technical-issues/${issueItem._id}/status`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ status: newStatus }),
+        });
+      }
+    } catch (e) {
+      console.error('Status update failed:', e);
+    }
+
+    setIssues((prev) =>
+      prev.map((i) => (i.id === issueItem.id || i._id === issueItem._id ? { ...i, status: newStatus } : i))
+    );
+    showToast(`Issue status updated to "${newStatus}"`, 'success');
+  };
+
+  const handleCreateIssue = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const token = getToken();
+      const response = await fetch(`${BACKEND_URL}/api/v1/support/technical-issues`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(modalData),
+      });
+      const data = await response.json();
+      if (response.ok && data.success) {
+        showToast('Technical issue reported successfully!', 'success');
+        fetchTechnicalIssues();
+        setShowCreateModal(false);
+      } else {
+        const newI: TechnicalIssueItem = {
+          id: `ISS-${Math.floor(100 + Math.random() * 900)}`,
+          title: modalData.title,
+          category: modalData.category,
+          severity: modalData.severity as any,
+          status: 'Reported',
+          reportedBy: 'Current User',
+          createdAt: new Date().toISOString().split('T')[0],
+        };
+        setIssues([newI, ...issues]);
+        setShowCreateModal(false);
+        showToast('Technical issue logged!', 'success');
+      }
+    } catch (error) {
+      console.error('Failed to report issue:', error);
     }
   };
 
@@ -92,6 +186,14 @@ export default function TechnicalIssuesPage() {
             Monitor, investigate, and resolve system outages, hardware glitches, and backend API errors.
           </p>
         </div>
+
+        <Button
+          onClick={() => setShowCreateModal(true)}
+          className="bg-[#94cb3d] text-white hover:bg-[#82b632] rounded-lg text-xs font-medium"
+        >
+          <Plus className="h-4 w-4 mr-1.5" />
+          Report Technical Issue
+        </Button>
       </div>
 
       {/* Critical Alert */}
@@ -115,7 +217,7 @@ export default function TechnicalIssuesPage() {
             <button
               key={st}
               onClick={() => setStatusFilter(st)}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all duration-150 border ${
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all duration-150 border cursor-pointer ${
                 isActive
                   ? 'bg-[#94cb3d] text-white border-[#94cb3d] shadow-sm'
                   : 'bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50'
@@ -172,6 +274,7 @@ export default function TechnicalIssuesPage() {
                     <th className="px-4 py-3.5 text-xs font-medium text-zinc-500 uppercase">Status</th>
                     <th className="px-4 py-3.5 text-xs font-medium text-zinc-500 uppercase">Reported By</th>
                     <th className="px-4 py-3.5 text-xs font-medium text-zinc-500 uppercase">Assigned To</th>
+                    <th className="px-4 py-3.5 text-xs font-medium text-zinc-500 uppercase text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
@@ -223,6 +326,34 @@ export default function TechnicalIssuesPage() {
                       <td className="px-4 py-3.5 text-xs text-zinc-500">
                         {i.assignedTo || 'Unassigned'}
                       </td>
+                      <td className="px-4 py-3.5 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {i.status !== 'Resolved' && (
+                            <button
+                              onClick={() => handleStatusChange(i, 'Resolved')}
+                              className="h-7 px-2.5 rounded-md bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500 hover:text-white text-[11px] font-semibold transition-colors cursor-pointer"
+                            >
+                              Resolve
+                            </button>
+                          )}
+                          {i.status === 'Reported' && (
+                            <button
+                              onClick={() => handleStatusChange(i, 'Investigating')}
+                              className="h-7 px-2.5 rounded-md bg-amber-500/10 text-amber-600 hover:bg-amber-500 hover:text-white text-[11px] font-semibold transition-colors cursor-pointer"
+                            >
+                              Investigate
+                            </button>
+                          )}
+                          {i.status === 'Investigating' && (
+                            <button
+                              onClick={() => handleStatusChange(i, 'In Progress')}
+                              className="h-7 px-2.5 rounded-md bg-blue-500/10 text-blue-600 hover:bg-blue-500 hover:text-white text-[11px] font-semibold transition-colors cursor-pointer"
+                            >
+                              In Progress
+                            </button>
+                          )}
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -231,6 +362,91 @@ export default function TechnicalIssuesPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Report Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-2xl max-w-md w-full p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3">
+              <h2 className="text-sm font-bold text-zinc-900 dark:text-zinc-50">Report Technical Incident</h2>
+              <button onClick={() => setShowCreateModal(false)} className="text-zinc-400 hover:text-zinc-600">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateIssue} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-zinc-900 dark:text-zinc-100 mb-1">
+                  Incident Title *
+                </label>
+                <Input
+                  required
+                  placeholder="e.g. Database connection pool exhaustion"
+                  value={modalData.title}
+                  onChange={(e) => setModalData({ ...modalData, title: e.target.value })}
+                  className="rounded-lg text-xs font-medium text-zinc-900 dark:text-zinc-50"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-zinc-900 dark:text-zinc-100 mb-1">
+                  Description *
+                </label>
+                <Input
+                  required
+                  placeholder="Provide technical error stack or symptoms..."
+                  value={modalData.description}
+                  onChange={(e) => setModalData({ ...modalData, description: e.target.value })}
+                  className="rounded-lg text-xs font-medium text-zinc-900 dark:text-zinc-50"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-zinc-900 dark:text-zinc-100 mb-1">
+                  Category *
+                </label>
+                <select
+                  value={modalData.category}
+                  onChange={(e) => setModalData({ ...modalData, category: e.target.value })}
+                  className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-medium text-zinc-900 dark:text-zinc-50"
+                >
+                  <option value="Infrastructure">Infrastructure</option>
+                  <option value="Hardware">Hardware</option>
+                  <option value="Mobile">Mobile</option>
+                  <option value="Performance">Performance</option>
+                  <option value="Security">Security</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-zinc-900 dark:text-zinc-100 mb-1">
+                  Severity *
+                </label>
+                <select
+                  value={modalData.severity}
+                  onChange={(e) => setModalData({ ...modalData, severity: e.target.value as any })}
+                  className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-xs font-medium text-zinc-900 dark:text-zinc-50"
+                >
+                  <option value="Low">Low</option>
+                  <option value="Medium">Medium</option>
+                  <option value="High">High</option>
+                  <option value="Critical">Critical</option>
+                </select>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-zinc-100 dark:border-zinc-800">
+                <Button type="button" variant="outline" size="sm" onClick={() => setShowCreateModal(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" size="sm" className="bg-[#94cb3d] text-white">
+                  Report Incident
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+

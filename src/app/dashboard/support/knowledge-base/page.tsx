@@ -10,12 +10,13 @@ import {
   FileText,
   CheckCircle2,
   X,
-  PlusCircle,
+  Trash2,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { getToken } from '@/lib/auth';
 
 interface Article {
   _id?: string;
@@ -32,7 +33,7 @@ interface Article {
 }
 
 export default function KnowledgeBasePage() {
-  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || '';
+  const BACKEND_URL = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/api\/v1\/?$/, '');
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -53,10 +54,27 @@ export default function KnowledgeBasePage() {
 
   const fetchKnowledgeBase = async () => {
     try {
-      const response = await fetch(`${BACKEND_URL}/api/v1/support/knowledge-base`);
+      const token = getToken();
+      const response = await fetch(`${BACKEND_URL}/api/v1/support/knowledge-base`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await response.json();
-      if (data.success && Array.isArray(data.data)) {
-        setArticles(data.data);
+      if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+        setArticles(
+          data.data.map((item: any) => ({
+            _id: item._id,
+            id: item._id,
+            title: item.title,
+            content: item.content,
+            category: item.category || 'General',
+            tags: item.tags || [],
+            author: item.author?.firstName ? `${item.author.firstName} ${item.author.lastName}` : (item.author || 'Support Admin'),
+            views: item.views || 0,
+            helpfulCount: item.helpfulCount || 0,
+            isPublished: item.isPublished ?? true,
+            createdAt: item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'Today',
+          }))
+        );
       } else {
         const mock: Article[] = [
           { id: 'KB-001', title: 'How to reset your password and security credentials', category: 'Account Settings', tags: ['password', 'security'], author: 'John Doe', views: 1250, helpfulCount: 89, isPublished: true, createdAt: '2026-08-20' },
@@ -78,12 +96,32 @@ export default function KnowledgeBasePage() {
     setTimeout(() => setToast(null), 3000);
   };
 
+  const handleDeleteArticle = async (article: Article) => {
+    try {
+      const token = getToken();
+      if (article._id) {
+        await fetch(`${BACKEND_URL}/api/v1/support/knowledge-base/${article._id}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      }
+    } catch (e) {
+      console.error('Failed to delete article:', e);
+    }
+    setArticles((prev) => prev.filter((a) => a.id !== article.id && a._id !== article._id));
+    showToast('Knowledge article deleted', 'success');
+  };
+
   const handleCreateArticle = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const token = getToken();
       const response = await fetch(`${BACKEND_URL}/api/v1/support/knowledge-base`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify(modalData),
       });
       const data = await response.json();
@@ -173,7 +211,7 @@ export default function KnowledgeBasePage() {
             <button
               key={cat}
               onClick={() => setCategoryFilter(cat)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors border ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors border cursor-pointer ${
                 categoryFilter === cat
                   ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 border-zinc-900'
                   : 'bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 border-zinc-200 hover:bg-zinc-50'
@@ -194,7 +232,16 @@ export default function KnowledgeBasePage() {
                 <Badge variant="secondary" className="text-[10px]">
                   {article.category}
                 </Badge>
-                <span className="text-[10px] font-mono text-zinc-400">{article.createdAt}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-mono text-zinc-400">{article.createdAt}</span>
+                  <button
+                    onClick={() => handleDeleteArticle(article)}
+                    className="text-zinc-400 hover:text-red-600 transition-colors"
+                    title="Delete Article"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               </div>
 
               <h3 className="text-xs font-bold text-zinc-900 dark:text-zinc-50 leading-snug line-clamp-2">
@@ -286,3 +333,4 @@ export default function KnowledgeBasePage() {
     </div>
   );
 }
+

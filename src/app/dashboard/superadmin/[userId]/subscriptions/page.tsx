@@ -12,7 +12,6 @@ import {
   CheckCircle2,
   AlertCircle,
   Building2,
-  Sparkles,
   Zap,
   ShieldCheck,
   Calendar,
@@ -693,7 +692,7 @@ export default function SubscriptionsPage() {
           <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50 dark:bg-zinc-950">
               <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-[#94cb3d]" />
+                <Zap className="h-4 w-4 text-[#94cb3d]" />
                 <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
                   Assign New Corporate Subscription
                 </h3>

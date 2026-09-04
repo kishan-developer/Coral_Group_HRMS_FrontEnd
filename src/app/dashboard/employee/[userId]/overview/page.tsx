@@ -12,7 +12,7 @@ export default function EmployeeDashboard() {
   const params = useParams();
   const router = useRouter();
   const userId = params.userId as string;
-  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || '';
+  const BACKEND_URL = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/api\/v1\/?$/, '');
 
   const [loading, setLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<any>(null);

@@ -6,26 +6,30 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { getToken } from '@/lib/auth';
 
 interface Message {
-  id: string;
-  sender: 'User' | 'Agent';
+  id?: string;
+  _id?: string;
+  sender: 'User' | 'Agent' | string;
   message: string;
-  timestamp: string;
+  timestamp?: string;
+  createdAt?: string;
 }
 
 interface ChatSession {
+  _id?: string;
   id: string;
-  userId: string;
+  userId?: string;
   userName: string;
-  status: 'Active' | 'Waiting' | 'Closed';
+  status: 'Active' | 'Waiting' | 'Closed' | string;
   messages: Message[];
   lastMessage?: string;
   lastMessageTime?: string;
 }
 
 export default function LiveChatPage() {
-  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || '';
+  const BACKEND_URL = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/api\/v1\/?$/, '');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('All');
   const [chats, setChats] = useState<ChatSession[]>([]);
@@ -40,12 +44,30 @@ export default function LiveChatPage() {
 
   const fetchLiveChats = async () => {
     try {
-      const response = await fetch(`${BACKEND_URL}/api/v1/support/live-chat`);
+      const token = getToken();
+      const response = await fetch(`${BACKEND_URL}/api/v1/support/live-chat`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await response.json();
-      if (data.success && Array.isArray(data.data)) {
-        setChats(data.data);
+      if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+        const formatted: ChatSession[] = data.data.map((item: any) => ({
+          _id: item._id,
+          id: item._id,
+          userId: item.userId?.employeeId || item.userId?._id || 'EMP-001',
+          userName: item.userName || (item.userId?.firstName ? `${item.userId.firstName} ${item.userId.lastName}` : 'User'),
+          status: item.status || 'Active',
+          messages: (item.messages || []).map((m: any) => ({
+            id: m._id || m.id,
+            sender: m.sender || 'User',
+            message: m.message,
+            timestamp: m.timestamp || (m.createdAt ? new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now'),
+          })),
+          lastMessage: item.messages?.length > 0 ? item.messages[item.messages.length - 1].message : 'Chat session initialized',
+          lastMessageTime: item.updatedAt ? new Date(item.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Now',
+        }));
+        setChats(formatted);
+        setSelectedChat(formatted[0]);
       } else {
-        // Fallback mock chats
         const mockData: ChatSession[] = [
           {
             id: 'CHAT-001',
@@ -87,22 +109,40 @@ export default function LiveChatPage() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!messageInput.trim() || !selectedChat) return;
+
+    const text = messageInput;
+    setMessageInput('');
 
     const newMsg: Message = {
       id: `msg-${Date.now()}`,
       sender: 'Agent',
-      message: messageInput,
+      message: text,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
 
+    try {
+      const token = getToken();
+      const chatId = selectedChat._id || selectedChat.id;
+      await fetch(`${BACKEND_URL}/api/v1/support/live-chat/${chatId}/messages`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ sender: 'Agent', message: text }),
+      });
+    } catch (e) {
+      console.error('Failed to send chat message:', e);
+    }
+
     const updatedChats = chats.map((c) => {
-      if (c.id === selectedChat.id) {
+      if (c.id === selectedChat.id || c._id === selectedChat._id) {
         return {
           ...c,
           messages: [...c.messages, newMsg],
-          lastMessage: messageInput,
+          lastMessage: text,
           lastMessageTime: newMsg.timestamp,
         };
       }
@@ -113,10 +153,34 @@ export default function LiveChatPage() {
     setSelectedChat({
       ...selectedChat,
       messages: [...selectedChat.messages, newMsg],
-      lastMessage: messageInput,
+      lastMessage: text,
     });
-    setMessageInput('');
     showToast('Reply dispatched to live session', 'success');
+  };
+
+  const handleCloseSession = async (chat: ChatSession) => {
+    try {
+      const token = getToken();
+      const chatId = chat._id || chat.id;
+      await fetch(`${BACKEND_URL}/api/v1/support/live-chat/${chatId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status: 'Closed' }),
+      });
+    } catch (e) {
+      console.error('Failed to close chat session:', e);
+    }
+
+    setChats((prev) =>
+      prev.map((c) => (c.id === chat.id || c._id === chat._id ? { ...c, status: 'Closed' } : c))
+    );
+    if (selectedChat?.id === chat.id || selectedChat?._id === chat._id) {
+      setSelectedChat({ ...selectedChat, status: 'Closed' });
+    }
+    showToast('Chat session closed', 'info');
   };
 
   const filteredChats = chats.filter((chat) => {
@@ -151,7 +215,7 @@ export default function LiveChatPage() {
               <MessageSquare className="h-5 w-5 text-[#94cb3d]" />
               Support Live Chat Queue Command Center
             </h1>
-            <Badge variant="brand">Real-Time WebSocket Engine</Badge>
+            <Badge variant="brand">Real-Time Engine</Badge>
           </div>
           <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400 mt-1">
             Dispatch instant messaging responses, assist active employee sessions, and resolve tickets live.
@@ -183,11 +247,11 @@ export default function LiveChatPage() {
             </div>
 
             <div className="flex gap-1.5">
-              {['All', 'Active', 'Waiting'].map((st) => (
+              {['All', 'Active', 'Waiting', 'Closed'].map((st) => (
                 <button
                   key={st}
                   onClick={() => setStatusFilter(st)}
-                  className={`text-xs px-3 py-1 rounded-lg font-medium border transition-colors ${
+                  className={`text-xs px-3 py-1 rounded-lg font-medium border transition-colors cursor-pointer ${
                     statusFilter === st
                       ? 'bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 border-zinc-900'
                       : 'bg-zinc-50 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border-zinc-200'
@@ -201,10 +265,10 @@ export default function LiveChatPage() {
             <div className="flex-1 overflow-y-auto space-y-2">
               {filteredChats.map((chat) => (
                 <div
-                  key={chat.id}
+                  key={chat.id || chat._id}
                   onClick={() => setSelectedChat(chat)}
                   className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                    currentChat?.id === chat.id
+                    currentChat?.id === chat.id || currentChat?._id === chat._id
                       ? 'bg-[#94cb3d]/10 border-[#94cb3d]'
                       : 'bg-white dark:bg-zinc-900 border-zinc-200/80 dark:border-zinc-800 hover:bg-zinc-50'
                   }`}
@@ -217,7 +281,7 @@ export default function LiveChatPage() {
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold text-zinc-900 dark:text-zinc-50">{chat.userName}</span>
                         <Badge
-                          variant={chat.status === 'Active' ? 'success' : 'brand'}
+                          variant={chat.status === 'Active' ? 'success' : chat.status === 'Waiting' ? 'brand' : 'secondary'}
                           className="text-[9px] uppercase font-bold"
                         >
                           {chat.status}
@@ -247,12 +311,23 @@ export default function LiveChatPage() {
                     <span className="text-[10px] font-mono text-zinc-500">{currentChat.userId} • Live Session</span>
                   </div>
                 </div>
+
+                {currentChat.status !== 'Closed' && (
+                  <Button
+                    onClick={() => handleCloseSession(currentChat)}
+                    variant="outline"
+                    size="sm"
+                    className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    End Chat Session
+                  </Button>
+                )}
               </div>
 
               {/* Message Feed */}
               <div className="p-4 flex-1 overflow-y-auto space-y-3 min-h-[320px]">
-                {currentChat.messages.map((msg) => (
-                  <div key={msg.id} className={`flex ${msg.sender === 'Agent' ? 'justify-end' : 'justify-start'}`}>
+                {currentChat.messages.map((msg, idx) => (
+                  <div key={msg.id || idx} className={`flex ${msg.sender === 'Agent' ? 'justify-end' : 'justify-start'}`}>
                     <div
                       className={`max-w-[75%] rounded-xl p-3 text-xs ${
                         msg.sender === 'Agent'
@@ -273,13 +348,18 @@ export default function LiveChatPage() {
               <div className="p-4 border-t border-zinc-200/80 dark:border-zinc-800 flex gap-2">
                 <Input
                   type="text"
-                  placeholder="Type your support response..."
+                  placeholder={currentChat.status === 'Closed' ? 'Session is closed' : 'Type your support response...'}
+                  disabled={currentChat.status === 'Closed'}
                   value={messageInput}
                   onChange={(e) => setMessageInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
                   className="rounded-lg text-xs font-medium"
                 />
-                <Button onClick={handleSendMessage} className="bg-[#94cb3d] text-white hover:bg-[#82b632]">
+                <Button
+                  onClick={handleSendMessage}
+                  disabled={currentChat.status === 'Closed'}
+                  className="bg-[#94cb3d] text-white hover:bg-[#82b632]"
+                >
                   <Send className="h-4 w-4 mr-1" />
                   Send
                 </Button>
@@ -295,3 +375,4 @@ export default function LiveChatPage() {
     </div>
   );
 }
+

@@ -20,7 +20,7 @@ import {
   FileText,
   SlidersHorizontal,
   X,
-  Sparkles,
+  Zap,
   ArrowUpRight,
   Activity,
   Copy,

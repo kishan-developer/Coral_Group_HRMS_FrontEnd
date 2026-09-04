@@ -33,7 +33,7 @@ interface DashboardStats {
 }
 
 export default function SuperAdminDashboard() {
-  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || '';
+  const BACKEND_URL = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/api\/v1\/?$/, '');
   const [stats, setStats] = useState<DashboardStats>({
     totalCompanies: 156,
     totalEmployees: 12450,

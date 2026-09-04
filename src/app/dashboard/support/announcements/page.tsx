@@ -8,11 +8,13 @@ import {
   CheckCircle2,
   X,
   Calendar,
+  Trash2,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { getToken } from '@/lib/auth';
 
 interface AnnouncementItem {
   _id?: string;
@@ -28,7 +30,7 @@ interface AnnouncementItem {
 }
 
 export default function SupportAnnouncementsPage() {
-  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || '';
+  const BACKEND_URL = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/api\/v1\/?$/, '');
   const [announcements, setAnnouncements] = useState<AnnouncementItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -50,10 +52,26 @@ export default function SupportAnnouncementsPage() {
 
   const fetchAnnouncements = async () => {
     try {
-      const response = await fetch(`${BACKEND_URL}/api/v1/support/announcements`);
+      const token = getToken();
+      const response = await fetch(`${BACKEND_URL}/api/v1/support/announcements`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await response.json();
-      if (data.success && Array.isArray(data.data)) {
-        setAnnouncements(data.data);
+      if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+        setAnnouncements(
+          data.data.map((item: any) => ({
+            _id: item._id,
+            id: item._id || item.announcementId,
+            announcementId: item.announcementId,
+            title: item.title,
+            content: item.content,
+            type: item.type || 'General',
+            targetAudience: item.targetAudience || 'All',
+            isPublished: item.isPublished ?? true,
+            createdBy: item.createdBy?.firstName ? `${item.createdBy.firstName} ${item.createdBy.lastName}` : (item.createdBy || 'Support Admin'),
+            createdAt: item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'Today',
+          }))
+        );
       } else {
         const mock: AnnouncementItem[] = [
           { id: 'ANN-001', title: 'System Scheduled Maintenance Outage', content: 'HRMS server maintenance will take place tonight between 11 PM and 2 AM.', type: 'Urgent', targetAudience: 'All', isPublished: true, createdBy: 'IT Infrastructure', createdAt: '2026-08-23' },
@@ -74,12 +92,32 @@ export default function SupportAnnouncementsPage() {
     setTimeout(() => setToast(null), 3000);
   };
 
+  const handleDeleteAnnouncement = async (announcement: AnnouncementItem) => {
+    try {
+      const token = getToken();
+      if (announcement._id) {
+        await fetch(`${BACKEND_URL}/api/v1/support/announcements/${announcement._id}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      }
+    } catch (e) {
+      console.error('Failed to delete announcement:', e);
+    }
+    setAnnouncements((prev) => prev.filter((a) => a.id !== announcement.id && a._id !== announcement._id));
+    showToast('Announcement deleted', 'success');
+  };
+
   const handleCreateAnnouncement = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const token = getToken();
       const response = await fetch(`${BACKEND_URL}/api/v1/support/announcements`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ ...modalData, isPublished: true }),
       });
       const data = await response.json();
@@ -162,7 +200,7 @@ export default function SupportAnnouncementsPage() {
             <button
               key={t}
               onClick={() => setTypeFilter(t)}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all duration-150 border ${
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all duration-150 border cursor-pointer ${
                 isActive
                   ? 'bg-[#94cb3d] text-white border-[#94cb3d] shadow-sm'
                   : 'bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50'
@@ -212,7 +250,16 @@ export default function SupportAnnouncementsPage() {
                     Audience: {a.targetAudience}
                   </Badge>
                 </div>
-                <span className="text-[10px] font-mono text-zinc-400">{a.createdAt}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-mono text-zinc-400">{a.createdAt}</span>
+                  <button
+                    onClick={() => handleDeleteAnnouncement(a)}
+                    className="text-zinc-400 hover:text-red-600 transition-colors"
+                    title="Delete Announcement"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               </div>
 
               <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-50">
@@ -320,3 +367,4 @@ export default function SupportAnnouncementsPage() {
     </div>
   );
 }
+

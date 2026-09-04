@@ -16,7 +16,6 @@ import {
   Clock,
   ArrowRight,
   Layers,
-  Sparkles,
   Sliders,
   CheckCircle2,
 } from 'lucide-react';
@@ -49,7 +48,7 @@ interface Holiday {
 export default function LeaveSetupPage() {
   const params = useParams();
   const userId = params.userId as string;
-  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || '';
+  const BACKEND_URL = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/api\/v1\/?$/, '');
 
   const [policy, setPolicy] = useState<LeavePolicy>({
     casualLeaveDays: 12,
@@ -527,7 +526,7 @@ export default function LeaveSetupPage() {
             <div className="p-5 rounded-2xl bg-gradient-to-r from-zinc-900 to-zinc-950 text-white space-y-3 border border-zinc-800">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-[#94cb3d]" />
+                  <Layers className="h-4 w-4 text-[#94cb3d]" />
                   <span className="text-xs font-bold uppercase tracking-wider text-[#94cb3d]">
                     Automatic Leave Priority Consumption Order
                   </span>

@@ -18,10 +18,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { getToken } from '@/lib/auth';
 
 interface Ticket {
   _id?: string;
   id?: string;
+  ticketId?: string;
   title?: string;
   subject?: string;
   category: 'Technical' | 'HR' | 'Payroll' | 'IT' | 'General';
@@ -33,7 +35,7 @@ interface Ticket {
 }
 
 export default function SupportTicketsPage() {
-  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || '';
+  const BACKEND_URL = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/api\/v1\/?$/, '');
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -54,13 +56,29 @@ export default function SupportTicketsPage() {
   }, []);
 
   const fetchTickets = async () => {
+    setLoading(true);
     try {
-      const response = await fetch(`${BACKEND_URL}/api/v1/support/tickets`);
+      const token = getToken();
+      const response = await fetch(`${BACKEND_URL}/api/v1/support/tickets`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await response.json();
-      if (data.success && Array.isArray(data.data)) {
-        setTickets(data.data);
+      if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+        setTickets(
+          data.data.map((item: any) => ({
+            _id: item._id,
+            id: item._id || item.ticketId,
+            ticketId: item.ticketId,
+            title: item.title || item.subject,
+            category: item.category || 'General',
+            priority: item.priority || 'Medium',
+            status: item.status || 'Open',
+            assignedTo: item.assignedTo?.firstName ? `${item.assignedTo.firstName} ${item.assignedTo.lastName}` : 'Unassigned',
+            createdBy: item.createdBy?.firstName ? `${item.createdBy.firstName} ${item.createdBy.lastName}` : item.createdBy || 'User',
+            createdAt: item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'Today',
+          }))
+        );
       } else {
-        // Fallback mock tickets if backend returns empty
         setTickets([
           { id: 'TKT-001', title: 'Login authentication issue', category: 'Technical', priority: 'High', status: 'Open', assignedTo: 'John Doe', createdBy: 'Alice Smith', createdAt: '2026-08-23' },
           { id: 'TKT-002', title: 'Payroll discrepancy query', category: 'Payroll', priority: 'Medium', status: 'In Progress', assignedTo: 'Jane Smith', createdBy: 'Bob Johnson', createdAt: '2026-08-23' },
@@ -81,12 +99,39 @@ export default function SupportTicketsPage() {
     setTimeout(() => setToast(null), 3000);
   };
 
+  const handleStatusChange = async (ticket: Ticket, newStatus: Ticket['status']) => {
+    try {
+      const token = getToken();
+      if (ticket._id) {
+        await fetch(`${BACKEND_URL}/api/v1/support/tickets/${ticket._id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ status: newStatus }),
+        });
+      }
+    } catch (e) {
+      console.error(e);
+    }
+
+    setTickets((prev) =>
+      prev.map((t) => (t.id === ticket.id || t._id === ticket._id ? { ...t, status: newStatus } : t))
+    );
+    showToast(`Ticket status updated to "${newStatus}"`, 'success');
+  };
+
   const handleCreateTicket = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const token = getToken();
       const response = await fetch(`${BACKEND_URL}/api/v1/support/tickets`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify(modalData),
       });
       const data = await response.json();
@@ -96,7 +141,6 @@ export default function SupportTicketsPage() {
         setShowCreateModal(false);
         setModalData({ title: '', description: '', category: 'Technical', priority: 'Medium', createdBy: 'bhardwajk852@gmail.com' });
       } else {
-        // Add locally
         const newT: Ticket = {
           id: `TKT-${Math.floor(100 + Math.random() * 900)}`,
           title: modalData.title,
@@ -117,7 +161,7 @@ export default function SupportTicketsPage() {
 
   const filteredTickets = tickets.filter((t) => {
     const titleText = t.title || t.subject || '';
-    const idText = t._id || t.id || '';
+    const idText = t._id || t.id || t.ticketId || '';
     const matchesSearch =
       titleText.toLowerCase().includes(searchQuery.toLowerCase()) ||
       idText.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -156,7 +200,7 @@ export default function SupportTicketsPage() {
 
         <Button
           onClick={() => setShowCreateModal(true)}
-          className="bg-[#94cb3d] text-white hover:bg-[#82b632] rounded-lg text-xs font-medium"
+          className="bg-[#94cb3d] text-white hover:bg-[#82b632] rounded-lg text-xs font-medium cursor-pointer"
         >
           <Plus className="h-4 w-4 mr-1.5" />
           Create Support Ticket
@@ -172,7 +216,7 @@ export default function SupportTicketsPage() {
             <button
               key={st}
               onClick={() => setStatusFilter(st)}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all duration-150 border ${
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-all duration-150 border cursor-pointer ${
                 isActive
                   ? 'bg-[#94cb3d] text-white border-[#94cb3d] shadow-sm'
                   : 'bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50'
@@ -229,13 +273,14 @@ export default function SupportTicketsPage() {
                     <th className="px-4 py-3.5 text-xs font-medium text-zinc-500 uppercase">Status</th>
                     <th className="px-4 py-3.5 text-xs font-medium text-zinc-500 uppercase">Created By</th>
                     <th className="px-4 py-3.5 text-xs font-medium text-zinc-500 uppercase">Date</th>
+                    <th className="px-4 py-3.5 text-xs font-medium text-zinc-500 uppercase text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
                   {filteredTickets.map((t) => (
                     <tr key={t.id || t._id} className="hover:bg-zinc-50/60 dark:hover:bg-zinc-950/40 transition-colors">
                       <td className="px-4 py-3.5 text-xs font-mono font-bold text-[#94cb3d]">
-                        {t.id || t._id?.substring(0, 8)}
+                        {t.ticketId || t.id || t._id?.substring(0, 8)}
                       </td>
                       <td className="px-4 py-3.5 text-xs font-semibold text-zinc-900 dark:text-zinc-50">
                         {t.title || t.subject}
@@ -279,6 +324,26 @@ export default function SupportTicketsPage() {
                       </td>
                       <td className="px-4 py-3.5 text-xs text-zinc-500 whitespace-nowrap">
                         {t.createdAt}
+                      </td>
+                      <td className="px-4 py-3.5 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {t.status !== 'Resolved' && (
+                            <button
+                              onClick={() => handleStatusChange(t, 'Resolved')}
+                              className="h-7 px-2.5 rounded-md bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500 hover:text-white text-[11px] font-semibold transition-colors cursor-pointer"
+                            >
+                              Resolve
+                            </button>
+                          )}
+                          {t.status === 'Open' && (
+                            <button
+                              onClick={() => handleStatusChange(t, 'In Progress')}
+                              className="h-7 px-2.5 rounded-md bg-blue-500/10 text-blue-600 hover:bg-blue-500 hover:text-white text-[11px] font-semibold transition-colors cursor-pointer"
+                            >
+                              In Progress
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}

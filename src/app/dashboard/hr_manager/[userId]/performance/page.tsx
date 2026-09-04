@@ -19,7 +19,7 @@ import {
   Eye,
   Edit,
   ChevronRight,
-  Sparkles,
+  Zap,
   Star,
   ShieldCheck,
   UserCheck,

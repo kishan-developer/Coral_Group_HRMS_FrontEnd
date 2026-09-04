@@ -31,7 +31,7 @@ interface LeaveRequest {
 export default function EmployeeLeave() {
   const params = useParams();
   const userId = params.userId as string;
-  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || '';
+  const BACKEND_URL = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/api\/v1\/?$/, '');
   const [loading, setLoading] = useState(true);
   const [leaves, setLeaves] = useState<LeaveRequest[]>([]);
   const [leaveBalance, setLeaveBalance] = useState<LeaveBalanceState>({

@@ -14,9 +14,10 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { getToken } from '@/lib/auth';
 
 export default function SupportReportsPage() {
-  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || '';
+  const BACKEND_URL = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/api\/v1\/?$/, '');
   const [activeTab, setActiveTab] = useState<string>('tickets');
   const [reportsData, setReportsData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -27,7 +28,10 @@ export default function SupportReportsPage() {
 
   const fetchReports = async () => {
     try {
-      const response = await fetch(`${BACKEND_URL}/api/v1/support/reports`);
+      const token = getToken();
+      const response = await fetch(`${BACKEND_URL}/api/v1/support/reports`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await response.json();
       if (data.success && data.data) {
         setReportsData(data.data);
@@ -96,28 +100,28 @@ export default function SupportReportsPage() {
             <Card className="rounded-xl border-zinc-200/80 dark:border-zinc-800">
               <CardContent className="p-5">
                 <p className="text-xs font-medium text-zinc-500">Total Support Tickets</p>
-                <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 mt-1">269</p>
+                <p className="text-xl font-semibold text-zinc-900 dark:text-zinc-50 mt-1">269</p>
                 <span className="text-[10px] text-emerald-600 font-bold">↑ 12% vs last month</span>
               </CardContent>
             </Card>
             <Card className="rounded-xl border-zinc-200/80 dark:border-zinc-800">
               <CardContent className="p-5">
                 <p className="text-xs font-medium text-zinc-500">Resolved Tickets</p>
-                <p className="text-2xl font-bold text-emerald-600 mt-1">214</p>
+                <p className="text-xl font-semibold text-emerald-600 mt-1">214</p>
                 <span className="text-[10px] text-zinc-400">79.5% Resolution Rate</span>
               </CardContent>
             </Card>
             <Card className="rounded-xl border-zinc-200/80 dark:border-zinc-800">
               <CardContent className="p-5">
                 <p className="text-xs font-medium text-zinc-500">Open & In Progress</p>
-                <p className="text-2xl font-bold text-amber-500 mt-1">45</p>
+                <p className="text-xl font-semibold text-amber-500 mt-1">45</p>
                 <span className="text-[10px] text-zinc-400">Active in Queue</span>
               </CardContent>
             </Card>
             <Card className="rounded-xl border-zinc-200/80 dark:border-zinc-800">
               <CardContent className="p-5">
                 <p className="text-xs font-medium text-zinc-500">Avg Resolution Time</p>
-                <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 mt-1">4.2 Hrs</p>
+                <p className="text-xl font-semibold text-zinc-900 dark:text-zinc-50 mt-1">4.2 Hrs</p>
                 <span className="text-[10px] text-emerald-600 font-bold">Within 24h SLA limit</span>
               </CardContent>
             </Card>

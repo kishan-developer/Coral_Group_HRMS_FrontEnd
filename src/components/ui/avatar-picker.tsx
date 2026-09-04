@@ -2,14 +2,14 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { User, Briefcase, Code, ShieldCheck, Sparkles, Palette, Laptop, Activity } from 'lucide-react';
+import { User, Briefcase, Code, ShieldCheck, Zap, Palette, Laptop, Activity } from 'lucide-react';
 
 export const DEFAULT_AVATAR_ICONS = [
   { id: 'executive', icon: Briefcase, label: 'Executive', color: 'bg-emerald-500/15 text-emerald-600' },
   { id: 'manager', icon: User, label: 'Manager', color: 'bg-blue-500/15 text-blue-600' },
   { id: 'tech_lead', icon: Code, label: 'Tech Lead', color: 'bg-purple-500/15 text-purple-600' },
   { id: 'developer', icon: Laptop, label: 'Developer', color: 'bg-indigo-500/15 text-indigo-600' },
-  { id: 'analyst', icon: Activity, label: 'Analyst', color: 'bg-amber-500/15 text-amber-600' },
+  { id: 'analyst', icon: Zap, label: 'Analyst', color: 'bg-amber-500/15 text-amber-600' },
   { id: 'designer', icon: Palette, label: 'Designer', color: 'bg-rose-500/15 text-rose-600' },
   { id: 'admin', icon: ShieldCheck, label: 'Admin', color: 'bg-[#94cb3d]/20 text-[#94cb3d]' },
 ];

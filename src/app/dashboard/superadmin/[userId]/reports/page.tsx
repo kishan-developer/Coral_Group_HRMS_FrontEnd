@@ -23,7 +23,7 @@ import {
   MapPin,
   RefreshCw,
   X,
-  Sparkles,
+  Activity,
   SlidersHorizontal,
   ChevronRight,
   Send,
@@ -189,7 +189,7 @@ export default function SuperAdminReportsCenter() {
           <div className="space-y-2 max-w-2xl">
             <div className="flex flex-wrap items-center gap-2.5">
               <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#94cb3d]/20 border border-[#94cb3d]/40 text-[#94cb3d] text-xs font-bold tracking-wide uppercase">
-                <Sparkles className="h-3.5 w-3.5" />
+                <Activity className="h-3.5 w-3.5" />
                 <span>SuperAdmin Master Engine</span>
               </div>
               <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
@@ -899,7 +899,7 @@ export default function SuperAdminReportsCenter() {
           <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-2xl w-full max-w-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between bg-zinc-50 dark:bg-zinc-950">
               <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-[#94cb3d]" />
+                <Activity className="h-4 w-4 text-[#94cb3d]" />
                 <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
                   Custom Report Builder Wizard
                 </h3>

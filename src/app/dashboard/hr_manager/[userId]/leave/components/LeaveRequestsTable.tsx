@@ -25,7 +25,7 @@ export interface LeaveRequestItem {
 }
 
 export default function LeaveRequestsTable({ onLeaveRequestClick }: LeaveRequestsTableProps) {
-  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || '';
+  const BACKEND_URL = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/api\/v1\/?$/, '');
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRequests, setSelectedRequests] = useState<string[]>([]);

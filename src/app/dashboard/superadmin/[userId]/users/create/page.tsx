@@ -19,7 +19,7 @@ import {
   CheckCircle2,
   AlertCircle,
   HelpCircle,
-  Sparkles,
+  Zap,
   Shield,
   CreditCard,
   Headphones,
@@ -777,7 +777,7 @@ export default function CreateUser() {
 
                 <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800/60 pb-3">
                   <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-zinc-400">
-                    <Sparkles className="w-3.5 h-3.5 text-[#94cb3d]" />
+                    <Zap className="w-3.5 h-3.5 text-[#94cb3d]" />
                     Live Account Card
                   </div>
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />

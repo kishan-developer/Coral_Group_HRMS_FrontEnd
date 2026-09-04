@@ -18,7 +18,7 @@ import {
   Upload,
   Globe,
   Clock,
-  Sparkles,
+  Zap,
   Server,
   Key,
   Smartphone,

@@ -21,7 +21,7 @@ import {
   MessageSquare,
   AlertTriangle,
   RefreshCw,
-  Sparkles,
+  Zap,
   Info,
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -52,7 +52,7 @@ export interface ApprovalItem {
 export default function UnifiedApprovalsPage() {
   const params = useParams();
   const userId = params.userId as string;
-  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || '';
+  const BACKEND_URL = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/api\/v1\/?$/, '');
 
   const [activeCategory, setActiveCategory] = useState<ApprovalCategory>('all');
   const [searchTerm, setSearchTerm] = useState('');
